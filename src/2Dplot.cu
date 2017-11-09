@@ -17,6 +17,13 @@
 
 #include <thrust/complex.h>
 
+#define EPS 0.0000001  // 停止判定
+#define MAXIT 40    // 最大反復回数
+#define ZMAX 1.5     // 初期値の最大絶対値
+#define ZOOM 500     // 拡大率
+#define RMAX 3000    // 複素平面の分割数
+#define OFFS 0.3     // 明度のオフセット
+
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   #include <GLUT/glut.h>
@@ -27,52 +34,123 @@
 #include <GL/freeglut.h>
 #endif
 
-template<typename T> thrust::complex<T> OneVfunc( thrust::complex<T> z )
+template<typename T> thrust::complex<T> Update( thrust::complex<T> z )
 {
-	return z*z*z*z -6.0*z*z -11.0;
+	thrust::complex<T> vf = z*z*z -1.0;
+	thrust::complex<T> df = 3.0*z*z;
+
+	return z - vf / df;
 }
 
-template<typename T> thrust::complex<T> DOneVfunc( thrust::complex<T> z )
+template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
 {
-	return 4.0*z*z*z -12.0*z;
+	double diff = (double)(MAXIT);
+
+	count = 0;
+	while ((count < MAXIT) && (diff > EPS))
+	{
+		thrust::complex<T> d = Update(z);
+		diff = abs( d - z );
+		count++;
+		z = d;
+//		std::cout << z << std::endl;
+	}
+
+	return z;
 }
 
-template<typename T> thrust::complex<T> Newton( thrust::complex<T> z )
+template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	return z - OneVfunc(z) / DOneVfunc(z);
+	const int nfp = 3;  // 不動点の数
+	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
+
+	fps[0] = thrust::complex<T> ( 1.0, 0.0 );
+	fps[1] = thrust::complex<T> ( -0.5, 0.866025 );
+	fps[2] = thrust::complex<T> (  0.5, 0.866025 );
+
+	int col = 0;
+	double min = (double)(MAXIT);
+
+	for (int i=0; i<nfp; i++)
+	{
+		if (abs(z - fps[i]) < min)
+		{
+			min = abs(z - fps[0]);
+			col = i;
+		}
+	}
+	delete[] fps;
+
+	return col;
 }
 
 void display(void)
 {
+	glClearColor(0.0, 0.0, 0.0, 1.0); // 塗りつぶしの色を指定（黒）
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
-	glColor3d(1.0, 0.0, 0.0);         // 赤 (1,0,0) で描画
-
 	///////////////////////////////////
-	// 2点間に線を描画
-//	glBegin(GL_LINES);
-//
-//	glVertex2d(-3.0,  0.0);
-//	glVertex2d( 3.0,  0.0);
-//
-//	glVertex2d( 0.0, -3.0);
-//	glVertex2d( 0.0,  3.0);
-//
-//	glEnd();
+	// 座標軸の描画
+	glBegin(GL_LINES);
+	glColor3d(1.0, 0.0, 0.0);         // 赤 (1,0,0) で描画
+	glVertex2d(-ZMAX,  0.0);
+	glVertex2d( ZMAX,  0.0);
 
-	thrust::complex<double> p = thrust::complex<double>(1.0, 0.0);
+	glVertex2d( 0.0, -ZMAX);
+	glVertex2d( 0.0,  ZMAX);
 
-	int points = 4;
-	glBegin(GL_LINE_LOOP);
-	for (int i=0; i<points; i++)
+	glEnd();
+	glFlush();                        // OpenGL命令のフラッシュ
+	//////////////////////////////////////////////
+
+	//////////////////////////////////////////////
+	// 点の描画
+	glBegin(GL_POINTS);
+
+	double x = (double)(-ZMAX);
+
+//	#pragma omp parallel for
+	for (int i=0; i<RMAX; i++)
 	{
-		glVertex2d(p.real(),p.imag());
-		p += thrust::complex<double>(0.2, 0.0);
+		int count;
+		double y = (double)(-ZMAX);
+		for (int j=0; j<RMAX; j++)
+		{
+			thrust::complex<double> z0 = thrust::complex<double>( x, y );
+			thrust::complex<double> z = Newton(z0,count);
+			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+			//double brit = (1.0/MAXIT)*count + OFFS;
+
+			switch( FixPoint(z) )  // 塗りつぶし色の設定
+			{
+			case 0:
+				glColor3d(brit,0.0,0.0);
+				break;
+			case 1:
+				glColor3d(0.0,brit,0.0);
+				break;
+			case 2:
+				glColor3d(0.0,0.0,brit);
+				break;
+			default:
+				glColor3d(0.0,0.0,0.0);
+				break;
+			}
+
+			glVertex2d( z0.real(), z0.imag() );  // 点の描画
+			if (count >= MAXIT-10)
+			{
+				std::cout << "z0 = " << z0 << ", count = " << count;
+				std::cout << ", z = " << z << ", bright = " << brit;
+				std::cout << ", color = " << FixPoint(z) << std::endl;
+			}
+			y += (double)(2*ZMAX / RMAX);
+		}
+		x += (double)(2*ZMAX / RMAX);
 	}
 	glEnd();
-	///////////////////////////////////
-
-	glFlush();                        // OpenGL命令のフラッシュ
+	glFlush();
+	//////////////////////////////////////////////
 }
 
 void resize(int w, int h)
@@ -84,12 +162,7 @@ void resize(int w, int h)
 	glLoadIdentity();
 
 	// Screen上の表示領域をView portの大きさに比例させる
-	glOrtho( -w/250.0, w/250.0, -h/250.0, h/250.0, -1.0, 1.0);
-}
-
-void init(void)
-{
-	glClearColor(0.0, 0.0, 0.0, 1.0); // 塗りつぶしの色を指定
+	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
 }
 
 int main(int argc, char *argv[])
@@ -100,7 +173,6 @@ int main(int argc, char *argv[])
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
-	init();
 	glutMainLoop();                 // イベント待ち
 
 	return EXIT_SUCCESS;
