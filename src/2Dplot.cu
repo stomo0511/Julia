@@ -12,6 +12,8 @@
 #include <numeric>
 #include <cstdlib>
 #include <cmath>
+#include <unistd.h>
+#include <vector>
 
 #include <thrust/complex.h>
 
@@ -24,6 +26,21 @@
 #else
 #include <GL/freeglut.h>
 #endif
+
+template<typename T> thrust::complex<T> OneVfunc( thrust::complex<T> z )
+{
+	return z*z*z*z -6.0*z*z -11.0;
+}
+
+template<typename T> thrust::complex<T> DOneVfunc( thrust::complex<T> z )
+{
+	return 4.0*z*z*z -12.0*z;
+}
+
+template<typename T> thrust::complex<T> Newton( thrust::complex<T> z )
+{
+	return z - OneVfunc(z) / DOneVfunc(z);
+}
 
 void display(void)
 {
