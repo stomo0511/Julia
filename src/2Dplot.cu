@@ -69,7 +69,7 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 	{
 		if (abs(z - fps[i]) < min)
 		{
-			min = abs(z - fps[0]);
+			min = abs(z - fps[i]);
 			col = i;
 		}
 	}
