@@ -21,7 +21,7 @@
 #define MAXIT 40    // 最大反復回数
 #define ZMAX 1.5     // 初期値の最大絶対値
 #define ZOOM 500     // 拡大率
-#define RMAX 4000    // 複素平面の分割数
+#define RMAX 2000    // 複素平面の分割数
 #define OFFS 0.3     // 明度のオフセット
 
 #if defined (__APPLE__) || defined(MACOSX)
@@ -34,26 +34,24 @@
 #include <GL/freeglut.h>
 #endif
 
-template<typename T> thrust::complex<T> Update( thrust::complex<T> z )
+template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
-	thrust::complex<T> vf = z*z*z -1.0;
-	thrust::complex<T> df = 3.0*z*z;
+	return z*z*z -1.0;
+}
 
-	return z - vf / df;
+template<typename T> thrust::complex<T> df( thrust::complex<T> z )
+{
+	return 3.0*z*z;
 }
 
 template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
 {
-	double diff = (double)(MAXIT);
-
 	count = 0;
-	while ((count < MAXIT) && (diff > EPS))
+
+	while ((count < MAXIT) && (abs(vf(z)) > EPS))
 	{
-		thrust::complex<T> d = Update(z);
-		diff = abs( d - z );
+		z -= vf(z) / df(z);
 		count++;
-		z = d;
-//		std::cout << z << std::endl;
 	}
 
 	return z;
@@ -138,7 +136,7 @@ void display(void)
 			}
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-			if (count >= MAXIT-10)
+			if (count >= MAXIT-1)
 			{
 				std::cout << "z0 = " << z0 << ", count = " << count;
 				std::cout << ", z = " << z << ", bright = " << brit;
