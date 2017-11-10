@@ -21,7 +21,7 @@
 #define MAXIT 40    // 最大反復回数
 #define ZMAX 1.5     // 初期値の最大絶対値
 #define ZOOM 500     // 拡大率
-#define RMAX 3000    // 複素平面の分割数
+#define RMAX 4000    // 複素平面の分割数
 #define OFFS 0.3     // 明度のオフセット
 
 #if defined (__APPLE__) || defined(MACOSX)
