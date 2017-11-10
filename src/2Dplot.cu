@@ -16,8 +16,8 @@
 
 #define EPS 0.000001  // 停止判定
 #define MAXIT 40      // 最大反復回数
-#define ZMAX 1.5      // 初期値の最大絶対値
-#define ZOOM 500      // 拡大率
+#define ZMAX 4.0      // 初期値の最大絶対値
+#define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
 
 #if defined (__APPLE__) || defined(MACOSX)
@@ -32,12 +32,14 @@
 
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
-	return z*z*z -1.0;
+	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
+	return z*z*z*z*z + iu*z*z*z*z + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
 }
 
 template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 {
-	return 3.0*z*z;
+	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
+	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
 }
 
 template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
@@ -55,15 +57,17 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	const int nfp = 3;  // 不動点の数
+	const int nfp = 5;  // 不動点の数
 	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
 
-	fps[0] = thrust::complex<T> ( 1.0, 0.0 );
-	fps[1] = thrust::complex<T> ( -0.5, 0.866025 );
-	fps[2] = thrust::complex<T> (  0.5, 0.866025 );
+	fps[0] = thrust::complex<T> (  0.0,  1.0 );
+	fps[1] = thrust::complex<T> (  1.0,  2.0 );
+	fps[2] = thrust::complex<T> ( -1.0,  2.0 );
+	fps[3] = thrust::complex<T> (  3.0, -3.0 );
+	fps[4] = thrust::complex<T> ( -3.0, -3.0 );
 
 	int col = 0;
-	double min = (double)(MAXIT);
+	double min = 0.001;
 
 	for (int i=0; i<nfp; i++)
 	{
@@ -112,6 +116,12 @@ void display(void)
 			case 2:
 				glColor3d(0.0,0.0,brit);
 				break;
+			case 3:
+				glColor3d(brit,0.0,brit);
+				break;
+			case 4:
+				glColor3d(0.0,brit,brit);
+				break;
 			default:
 				glColor3d(0.0,0.0,0.0);
 				break;
@@ -148,7 +158,7 @@ void resize(int w, int h)
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitWindowSize(1000,1000);  // 初期Windowサイズ指定
+	glutInitWindowSize(1500,1500);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
