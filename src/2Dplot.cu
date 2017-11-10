@@ -40,7 +40,7 @@ template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 	return 3.0*z*z;
 }
 
-template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
+template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
 {
 	count = 0;
 
@@ -49,6 +49,7 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 		z -= vf(z) / df(z);
 		count++;
 	}
+	er = abs(vf(z));
 
 	return z;
 }
@@ -93,13 +94,22 @@ void display(void)
 
 	for (int i=0; i<RMAX; i++)
 	{
-		int count;
 		double y = (double)(-ZMAX);
 		for (int j=0; j<RMAX; j++)
 		{
+			int count;
+			double er, p;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Newton(z0,count);
-			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+			thrust::complex<double> z = Newton(z0,count,er);
+
+			p = 0.0;
+			if (count < MAXIT)
+			{
+				p = log2( -12.0 / log10(er));
+			}
+
+//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+			double brit = p;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -118,12 +128,14 @@ void display(void)
 			}
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-//			if (count >= MAXIT-1)
-//			{
-//				std::cout << "z0 = " << z0 << ", count = " << count;
-//				std::cout << ", z = " << z << ", bright = " << brit;
-//				std::cout << ", color = " << FixPoint(z) << std::endl;
-//			}
+			//if (count >= MAXIT-4)
+			if (count == 4)
+			{
+				std::cout << "z0 = " << z0 << ", count = " << count;
+				std::cout << ", z = " << z << ", bright = " << brit;
+				std::cout << ", color = " << FixPoint(z) << ", p = " << p;
+				std::cout << ", er = " << er << std::endl;
+			}
 			y += (double)(2*ZMAX / RMAX);
 		}
 		x += (double)(2*ZMAX / RMAX);
