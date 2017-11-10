@@ -14,7 +14,7 @@
 
 #include <thrust/complex.h>
 
-#define EPS 0.000001  // 停止判定
+#define EPS 0.0000001  // 停止判定
 #define MAXIT 40      // 最大反復回数
 #define ZMAX 1.5      // 初期値の最大絶対値
 #define ZOOM 500      // 拡大率
@@ -49,7 +49,6 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 		z -= vf(z) / df(z);
 		count++;
 	}
-
 	return z;
 }
 
@@ -59,8 +58,8 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
 
 	fps[0] = thrust::complex<T> ( 1.0, 0.0 );
-	fps[1] = thrust::complex<T> ( -0.5, 0.866025 );
-	fps[2] = thrust::complex<T> (  0.5, 0.866025 );
+	fps[1] = thrust::complex<T> ( -0.5,  0.866025 );
+	fps[2] = thrust::complex<T> ( -0.5, -0.866025 );
 
 	int col = 0;
 	double min = (double)(MAXIT);
