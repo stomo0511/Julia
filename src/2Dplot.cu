@@ -15,10 +15,10 @@
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
-#define MAXIT 40      // 最大反復回数
+#define MAXIT 60      // 最大反復回数
 #define ZMAX 1.5      // 初期値の最大絶対値
 #define ZOOM 500      // 拡大率
-#define RMAX 2000     // 複素平面の分割数
+#define RMAX 3000     // 複素平面の分割数
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -32,12 +32,12 @@
 
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
-	return z*z*z -1.0;
+	return z*z*z*z -6.0*z*z -11.0;
 }
 
 template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 {
-	return 3.0*z*z;
+	return 4.0*z*z*z -12.0*z;
 }
 
 template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
@@ -55,21 +55,22 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	const int nfp = 3;  // 不動点の数
+	const int nfp = 4;  // 不動点の数
 	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
 
-	fps[0] = thrust::complex<T> ( 1.0, 0.0 );
-	fps[1] = thrust::complex<T> ( -0.5, 0.866025 );
-	fps[2] = thrust::complex<T> (  0.5, 0.866025 );
+	fps[0] = thrust::complex<T> ( -2.73352, 0.0 );
+	fps[1] = thrust::complex<T> (  2.73352, 0.0 );
+	fps[2] = thrust::complex<T> (  0.0,  1.21332 );
+	fps[3] = thrust::complex<T> (  0.0, -1.21332 );
 
 	int col = 0;
-	double min = (double)(MAXIT);
+	double min = 0.001;
 
 	for (int i=0; i<nfp; i++)
 	{
 		if (abs(z - fps[i]) < min)
 		{
-			min = abs(z - fps[0]);
+			min = abs(z - fps[i]);
 			col = i;
 		}
 	}
@@ -112,13 +113,16 @@ void display(void)
 			case 2:
 				glColor3d(0.0,0.0,brit);
 				break;
+			case 3:
+				glColor3d(brit,0.0,brit);
+				break;
 			default:
 				glColor3d(0.0,0.0,0.0);
 				break;
 			}
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-//			if (count >= MAXIT-1)
+//			if (count < 3)
 //			{
 //				std::cout << "z0 = " << z0 << ", count = " << count;
 //				std::cout << ", z = " << z << ", bright = " << brit;
