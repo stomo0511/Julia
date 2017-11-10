@@ -9,20 +9,16 @@
  */
 
 #include <iostream>
-#include <numeric>
 #include <cstdlib>
 #include <cmath>
-#include <unistd.h>
-#include <vector>
 
 #include <thrust/complex.h>
 
-#define EPS 0.0000001  // 停止判定
-#define MAXIT 40    // 最大反復回数
-#define ZMAX 1.5     // 初期値の最大絶対値
-#define ZOOM 500     // 拡大率
-#define RMAX 2000    // 複素平面の分割数
-#define OFFS 0.3     // 明度のオフセット
+#define EPS 0.000001  // 停止判定
+#define MAXIT 40      // 最大反復回数
+#define ZMAX 1.5      // 初期値の最大絶対値
+#define ZOOM 500      // 拡大率
+#define RMAX 2000     // 複素平面の分割数
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -84,22 +80,10 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 
 void display(void)
 {
+	//////////////////////////////////////////////
+	// 背景を黒に
 	glClearColor(0.0, 0.0, 0.0, 1.0); // 塗りつぶしの色を指定（黒）
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
-
-	///////////////////////////////////
-	// 座標軸の描画
-	glBegin(GL_LINES);
-	glColor3d(1.0, 0.0, 0.0);         // 赤 (1,0,0) で描画
-	glVertex2d(-ZMAX,  0.0);
-	glVertex2d( ZMAX,  0.0);
-
-	glVertex2d( 0.0, -ZMAX);
-	glVertex2d( 0.0,  ZMAX);
-
-	glEnd();
-	glFlush();                        // OpenGL命令のフラッシュ
-	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
 	// 点の描画
@@ -107,7 +91,6 @@ void display(void)
 
 	double x = (double)(-ZMAX);
 
-//	#pragma omp parallel for
 	for (int i=0; i<RMAX; i++)
 	{
 		int count;
@@ -117,7 +100,6 @@ void display(void)
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Newton(z0,count);
 			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
-			//double brit = (1.0/MAXIT)*count + OFFS;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -136,12 +118,12 @@ void display(void)
 			}
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-			if (count >= MAXIT-1)
-			{
-				std::cout << "z0 = " << z0 << ", count = " << count;
-				std::cout << ", z = " << z << ", bright = " << brit;
-				std::cout << ", color = " << FixPoint(z) << std::endl;
-			}
+//			if (count >= MAXIT-1)
+//			{
+//				std::cout << "z0 = " << z0 << ", count = " << count;
+//				std::cout << ", z = " << z << ", bright = " << brit;
+//				std::cout << ", color = " << FixPoint(z) << std::endl;
+//			}
 			y += (double)(2*ZMAX / RMAX);
 		}
 		x += (double)(2*ZMAX / RMAX);
@@ -166,7 +148,6 @@ void resize(int w, int h)
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitDisplayMode(GLUT_RGBA); // RGBモードに設定
 	glutInitWindowSize(1000,1000);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
