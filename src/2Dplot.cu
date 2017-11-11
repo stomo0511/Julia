@@ -102,14 +102,20 @@ void display(void)
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Newton(z0,count,er);
 
-			p = 0.0;
-			if (count < MAXIT)
-			{
-				p = log2( -12.0 / log10(er));
-			}
+			//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
 
-			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+//			p = 0.0;
+//			if (count < MAXIT)
+//			{
+//				p = log2( -12.0 / log10(er));
+//			}
 //			double brit = p;
+
+			double brit;
+			if (count > 13)
+				brit = 0.0;
+			else
+				brit = (13.0 - double(count)) / 13.0;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
