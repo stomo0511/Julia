@@ -108,8 +108,8 @@ void display(void)
 				p = log2( -12.0 / log10(er));
 			}
 
-//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
-			double brit = p;
+			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+//			double brit = p;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -129,13 +129,13 @@ void display(void)
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
 			//if (count >= MAXIT-4)
-			if (count == 4)
-			{
-				std::cout << "z0 = " << z0 << ", count = " << count;
-				std::cout << ", z = " << z << ", bright = " << brit;
-				std::cout << ", color = " << FixPoint(z) << ", p = " << p;
-				std::cout << ", er = " << er << std::endl;
-			}
+//			if (count == 4)
+//			{
+//				std::cout << "z0 = " << z0 << ", count = " << count;
+//				std::cout << ", z = " << z << ", bright = " << brit;
+//				std::cout << ", color = " << FixPoint(z) << ", p = " << p;
+//				std::cout << ", er = " << er << std::endl;
+//			}
 			y += (double)(2*ZMAX / RMAX);
 		}
 		x += (double)(2*ZMAX / RMAX);
