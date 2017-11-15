@@ -108,8 +108,14 @@ void display(void)
 				p = log2( -12.0 / log10(er));
 			}
 
-			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
+//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
 //			double brit = p;
+
+			double brit;
+			if (count > 13)
+				brit = 0.0;
+			else
+				brit = (13.0 - double(count)) / 13.0;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
