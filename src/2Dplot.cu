@@ -164,7 +164,7 @@ void resize(int w, int h)
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitWindowSize(1500,1500);  // 初期Windowサイズ指定
+	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
