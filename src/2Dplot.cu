@@ -33,7 +33,7 @@
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
 	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return z*z*z*z*z + iu*z*z*z*z + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
+	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
 }
 
 template<typename T> thrust::complex<T> df( thrust::complex<T> z )
