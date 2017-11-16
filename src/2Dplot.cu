@@ -93,9 +93,9 @@ void DrawApollonius( int i, int j, double alp )
 
 	// Z_i の描画
 	glColor3d(1.0,1.0,1.0);   // 白の点を描画
-	glPointSize(10.0);      // 点の大きさ（ディフォルトは1.0)
+	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 	glBegin(GL_POINTS);
-	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
+//	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
 	glEnd();
 
 	// Apollonius円の描画
@@ -124,10 +124,7 @@ void display(void)
 	// 点の描画
 	glBegin(GL_POINTS);
 
-//	double x = (double)(-ZMAX);
-//	double x = (double)0.0;
 	double x = (double)(-ZMAX + XOFS);
-
 	for (int i=0; i<RMAX; i++)
 	{
 		double y = (double)(-ZMAX);
@@ -145,7 +142,7 @@ void display(void)
 			else
 				brit = (13.0 - double(count)) / 13.0;
 			// 明るさの補正
-			brit += 0.15;
+			brit += 0.1;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -196,7 +193,7 @@ void resize(int w, int h)
 	glLoadIdentity();
 
 	// Screen上の表示領域をView portの大きさに比例させる
-	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
+	glOrtho( -(double)w/ZOOM, (double)w/ZOOM, -(double)h/ZOOM, (double)h/ZOOM, -1.0, 1.0);
 }
 
 void saveImage( const unsigned int imageWidth, const unsigned int imageHeight )
