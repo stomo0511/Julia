@@ -15,7 +15,7 @@
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
-#define MAXIT 40      // 最大反復回数
+#define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
@@ -30,6 +30,18 @@
 #include <GL/freeglut.h>
 #endif
 
+#define NFP 5 // 零点の数
+thrust::complex<double> fps[NFP];
+
+void setZero( thrust::complex<double> *fps )
+{
+	fps[0] = thrust::complex<double> (  0.0,  1.0 );
+	fps[1] = thrust::complex<double> (  1.0,  2.0 );
+	fps[2] = thrust::complex<double> ( -1.0,  2.0 );
+	fps[3] = thrust::complex<double> (  3.0, -3.0 );
+	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
+}
+
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
 	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
@@ -42,7 +54,7 @@ template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
 }
 
-template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count )
+template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
 {
 	count = 0;
 
@@ -51,25 +63,17 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 		z -= vf(z) / df(z);
 		count++;
 	}
+	er = abs(vf(z));
 
 	return z;
 }
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	const int nfp = 5;  // 不動点の数
-	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
-
-	fps[0] = thrust::complex<T> (  0.0,  1.0 );
-	fps[1] = thrust::complex<T> (  1.0,  2.0 );
-	fps[2] = thrust::complex<T> ( -1.0,  2.0 );
-	fps[3] = thrust::complex<T> (  3.0, -3.0 );
-	fps[4] = thrust::complex<T> ( -3.0, -3.0 );
-
 	int col = 0;
-	double min = 0.001;
+	double min = (double)MAXIT;
 
-	for (int i=0; i<nfp; i++)
+	for (int i=0; i<NFP; i++)
 	{
 		if (abs(z - fps[i]) < min)
 		{
@@ -77,7 +81,6 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 			col = i;
 		}
 	}
-	delete[] fps;
 
 	return col;
 }
@@ -89,20 +92,22 @@ void display(void)
 	glClearColor(1.0, 1.0, 1.0, 1.0); // 塗りつぶしの色を指定
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
+	setZero(fps);     // 零点のセット
+
 	//////////////////////////////////////////////
 	// 点の描画
 	glBegin(GL_POINTS);
 
 	double x = (double)(-ZMAX);
-
 	for (int i=0; i<RMAX; i++)
 	{
-		int count;
 		double y = (double)(-ZMAX);
 		for (int j=0; j<RMAX; j++)
 		{
+			int count;
+			double er;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Newton(z0,count);
+			thrust::complex<double> z = Newton(z0,count,er);
 
 			double brit;
 			if (count > 13)
@@ -110,7 +115,7 @@ void display(void)
 			else
 				brit = (13.0 - double(count)) / 13.0;
 			// 明るさの補正
-			brit += 0.25;
+			brit += 0.2;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -159,7 +164,7 @@ void resize(int w, int h)
 	glLoadIdentity();
 
 	// Screen上の表示領域をView portの大きさに比例させる
-	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
+	glOrtho( -(double)w/ZOOM, (double)w/ZOOM, -(double)h/ZOOM, (double)h/ZOOM, -1.0, 1.0);
 }
 
 int main(int argc, char *argv[])
