@@ -116,6 +116,8 @@ void display(void)
 				brit = 0.0;
 			else
 				brit = (13.0 - double(count)) / 13.0;
+			// 明るさの補正
+			brit += 0.1;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
