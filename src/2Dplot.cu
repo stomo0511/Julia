@@ -11,14 +11,16 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <cassert>
 
 #include <thrust/complex.h>
 
-#define EPS 0.000001  // 停止判定
+#define EPS 0.0000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
+#define ORD  10        // 次数
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -54,6 +56,27 @@ template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
 }
 
+template<typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
+{
+	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
+
+	for (int i=0; i<NFP; i++)
+	{
+		thrust::complex<T> tmp = thrust::complex<T> (1.0,0.0);
+
+		// tmp = (z_i -z)^{k+1}
+		for (int k=0; k<=K; k++)
+		{
+			tmp = tmp * (fps[i] - z);
+		}
+		// tmp = -1.0 /  (z_i -z)^{k+1}
+		tmp = -1.0 / tmp;
+
+		f = f + ( 1.0 / df(fps[i]) )*tmp;
+	}
+	return f;
+}
+
 template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
 {
 	count = 0;
@@ -61,6 +84,22 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 	while ((count < MAXIT) && (abs(vf(z)) > EPS))
 	{
 		z -= vf(z) / df(z);
+		count++;
+	}
+	er = abs(vf(z));
+
+	return z;
+}
+
+template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, double &er )
+{
+	assert(p>=2);
+
+	count = 0;
+
+	while ((count < MAXIT) && (abs(vf(z)) > EPS))
+	{
+		z += vc(p-2,z) / vc(p-1,z);
 		count++;
 	}
 	er = abs(vf(z));
@@ -107,7 +146,7 @@ void display(void)
 			int count;
 			double er;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Newton(z0,count,er);
+			thrust::complex<double> z = Nourein(ORD,z0,count,er);
 
 			double brit;
 			if (count > 13)
