@@ -16,9 +16,9 @@
 #include <thrust/complex.h>
 
 #define EPS 0.0000001  // 停止判定
-#define MAXIT 40      // 最大反復回数
-#define ZMAX 1.5      // 初期値の最大絶対値
-#define ZOOM 500      // 拡大率
+#define MAXIT 30      // 最大反復回数
+#define ZMAX 1.0      // 初期値の最大絶対値
+#define ZOOM 600      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
 
 #if defined (__APPLE__) || defined(MACOSX)
@@ -92,11 +92,12 @@ void display(void)
 	// 点の描画
 	glBegin(GL_POINTS);
 
-	double x = (double)(-ZMAX);
+//	double x = (double)(-ZMAX);
+	double x = (double)0.0;
 
 	for (int i=0; i<RMAX; i++)
 	{
-		double y = (double)(-ZMAX);
+		double y = (double)(-1.0);
 		for (int j=0; j<RMAX; j++)
 		{
 			int count;
@@ -105,20 +106,13 @@ void display(void)
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Newton(z0,count,er);
 
-//			p = 0.0;
-//			if (count < MAXIT)
-//			{
-//				p = log2( -12.0 / log10(er));
-//			}
-
-//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
-//			double brit = p;
-
 			double brit;
 			if (count > 13)
 				brit = 0.0;
 			else
 				brit = (13.0 - double(count)) / 13.0;
+			// 明るさの補正
+			brit += 0.15;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -139,8 +133,8 @@ void display(void)
 				break;
 			}
 
-			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-			//if (count >= MAXIT-4)
+			glVertex2d( z0.real()-1.0, z0.imag() );  // 点の描画（原点補正あり）
+
 //			if (count == 4)
 //			{
 //				std::cout << "z0 = " << z0 << ", count = " << count;
@@ -148,10 +142,11 @@ void display(void)
 //				std::cout << ", color = " << FixPoint(z) << ", p = " << p;
 //				std::cout << ", er = " << er << std::endl;
 //			}
-			y += (double)(2*ZMAX / RMAX);
+			y += (double)(2.0 / RMAX);
 		}
-		x += (double)(2*ZMAX / RMAX);
+		x += (double)(2.0 / RMAX);
 	}
+
 	glEnd();
 	glFlush();
 	//////////////////////////////////////////////
@@ -166,6 +161,7 @@ void resize(int w, int h)
 	glLoadIdentity();
 
 	// Screen上の表示領域をView portの大きさに比例させる
+//	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
 	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
 }
 
