@@ -103,7 +103,6 @@ void display(void)
 		{
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Newton(z0,count);
-//			double brit = (double)(1.0/MAXIT)*(MAXIT - count);
 
 			double brit;
 			if (count > 13)
@@ -111,7 +110,7 @@ void display(void)
 			else
 				brit = (13.0 - double(count)) / 13.0;
 			// 明るさの補正
-			brit += 0.1;
+			brit += 0.25;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
