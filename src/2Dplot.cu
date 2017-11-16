@@ -11,15 +11,15 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
-//#include <cv.hpp>
 
 #include <thrust/complex.h>
 
 #define EPS 0.0000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
-#define ZMAX 1.0      // 初期値の最大絶対値
+#define ZMAX 0.8      // 初期値の最大絶対値
 #define ZOOM 600      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
+#define XOFS 1.0      // x軸のオフセット
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -83,6 +83,34 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 	return col;
 }
 
+void DrawApollonius( int i, int j, double alp )
+{
+	const int pts = 180;    // 円周上の点数
+
+	thrust::complex<double> center = (fps[i] - alp*alp*fps[j]) / (1.0 - alp*alp);
+	double radius = alp*abs(fps[i] - fps[j]) / (1.0 - alp*alp);
+	double tic = (double)(2.0*M_PI / pts);
+
+	// Z_i の描画
+	glColor3d(1.0,1.0,1.0);   // 白の点を描画
+	glPointSize(10.0);      // 点の大きさ（ディフォルトは1.0)
+	glBegin(GL_POINTS);
+	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
+	glEnd();
+
+	// Apollonius円の描画
+	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
+
+	glBegin(GL_LINE_LOOP);
+	for (int i=1; i<pts; i++)
+	{
+		glVertex2d( center.real() + radius*cos( tic*i ) -XOFS  , center.imag() + radius*sin( tic*i ) );
+	}
+	glEnd();
+	glFlush();
+}
+
 void display(void)
 {
 	//////////////////////////////////////////////
@@ -90,18 +118,19 @@ void display(void)
 	glClearColor(0.0, 0.0, 0.0, 1.0); // 塗りつぶしの色を指定（黒）
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
+	setZero(fps);      // 零点のセット
+
 	//////////////////////////////////////////////
 	// 点の描画
 	glBegin(GL_POINTS);
 
-	setZero(fps);      // 零点のセット
-
 //	double x = (double)(-ZMAX);
-	double x = (double)0.0;
+//	double x = (double)0.0;
+	double x = (double)(-ZMAX + XOFS);
 
 	for (int i=0; i<RMAX; i++)
 	{
-		double y = (double)(-1.0);
+		double y = (double)(-ZMAX);
 		for (int j=0; j<RMAX; j++)
 		{
 			int count;
@@ -137,23 +166,25 @@ void display(void)
 				break;
 			}
 
-			glVertex2d( z0.real()-1.0, z0.imag() );  // 点の描画（原点補正あり）
+			glVertex2d( z0.real()-XOFS, z0.imag() );  // 点の描画（原点補正あり）
 
-//			if (count == 4)
-//			{
-//				std::cout << "z0 = " << z0 << ", count = " << count;
-//				std::cout << ", z = " << z << ", bright = " << brit;
-//				std::cout << ", color = " << FixPoint(z) << ", p = " << p;
-//				std::cout << ", er = " << er << std::endl;
-//			}
-			y += (double)(2.0 / RMAX);
+			y += (double)(2.0*ZMAX / RMAX);
 		}
-		x += (double)(2.0 / RMAX);
+		x += (double)(2.0*ZMAX / RMAX);
 	}
 
 	glEnd();
 	glFlush();
 	//////////////////////////////////////////////
+
+	//////////////////////////////////////////////
+	// Apollonius円の描画
+	double alp = (double)1.0 / (2*NFP - 3.0);
+
+	for (int j=1; j<NFP; j++)
+	{
+		DrawApollonius( 0, j, alp );
+	}
 }
 
 void resize(int w, int h)
@@ -165,7 +196,6 @@ void resize(int w, int h)
 	glLoadIdentity();
 
 	// Screen上の表示領域をView portの大きさに比例させる
-//	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
 	glOrtho( -w/ZOOM, w/ZOOM, -h/ZOOM, h/ZOOM, -1.0, 1.0);
 }
 
