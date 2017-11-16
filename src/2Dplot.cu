@@ -31,6 +31,17 @@
 #include <GL/freeglut.h>
 #endif
 
+#define NFP 4  // 不動点の数
+thrust::complex<double> fps[NFP];
+
+void setZero( thrust::complex<double> *fps )
+{
+	fps[0] = thrust::complex<double> (  1.0,  0.0 );
+	fps[1] = thrust::complex<double> (  0.0,  0.5 );
+	fps[2] = thrust::complex<double> (  0.0, -0.5 );
+	fps[3] = thrust::complex<double> ( -1.0,  0.0 );
+}
+
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
 	return z*z*z*z -(3.0*z*z)/(4.0) -(1.0)/(4.0);
@@ -57,18 +68,10 @@ template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	const int nfp = 4;  // 不動点の数
-	thrust::complex<T> *fps = new thrust::complex<T> [nfp];
-
-	fps[0] = thrust::complex<T> (  1.0,  0.0 );
-	fps[1] = thrust::complex<T> (  0.0,  0.5 );
-	fps[2] = thrust::complex<T> (  0.0, -0.5 );
-	fps[3] = thrust::complex<T> ( -1.0,  0.0 );
-
 	int col = 0;
 	double min = (double)(MAXIT);
 
-	for (int i=0; i<nfp; i++)
+	for (int i=0; i<NFP; i++)
 	{
 		if (abs(z - fps[i]) < min)
 		{
@@ -76,7 +79,6 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 			col = i;
 		}
 	}
-	delete[] fps;
 
 	return col;
 }
@@ -91,6 +93,8 @@ void display(void)
 	//////////////////////////////////////////////
 	// 点の描画
 	glBegin(GL_POINTS);
+
+	setZero(fps);      // 零点のセット
 
 //	double x = (double)(-ZMAX);
 	double x = (double)0.0;
