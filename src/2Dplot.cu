@@ -82,8 +82,8 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 void display(void)
 {
 	//////////////////////////////////////////////
-	// 背景を黒に
-	glClearColor(0.0, 0.0, 0.0, 1.0); // 塗りつぶしの色を指定（黒）
+	// 背景を白に
+	glClearColor(1.0, 1.0, 1.0, 1.0); // 塗りつぶしの色を指定
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
 	//////////////////////////////////////////////
