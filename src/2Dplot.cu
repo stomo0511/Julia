@@ -15,12 +15,12 @@
 
 #include <thrust/complex.h>
 
-#define EPS 0.0000001  // 停止判定
+#define EPS 0.000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
-#define ORD  32        // 次数
+#define ORD  32       // 次数
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -44,85 +44,11 @@ void setZero( thrust::complex<double> *fps )
 	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
 }
 
-template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
+void Reg0()
 {
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
-}
-
-template<typename T> thrust::complex<T> df( thrust::complex<T> z )
-{
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
-}
-
-template<typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
-{
-	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
-
-	for (int i=0; i<NFP; i++)
-	{
-		thrust::complex<T> tmp = thrust::complex<T> (1.0,0.0);
-
-		// tmp = (z_i -z)^{k+1}
-		for (int k=0; k<=K; k++)
-		{
-			tmp = tmp * (fps[i] - z);
-		}
-		// tmp = -1.0 /  (z_i -z)^{k+1}
-		tmp = -1.0 / tmp;
-
-		f = f + ( 1.0 / df(fps[i]) )*tmp;
-	}
-	return f;
-}
-
-template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
-{
-	count = 0;
-
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
-	{
-		z -= vf(z) / df(z);
-		count++;
-	}
-	er = abs(vf(z));
-
-	return z;
-}
-
-template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, double &er )
-{
-	assert(p>=2);
-
-	count = 0;
-
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
-	{
-		z += vc(p-2,z) / vc(p-1,z);
-		count++;
-	}
-	er = abs(vf(z));
-
-	return z;
-}
-
-template<typename T> int FixPoint( thrust::complex<T> z )
-{
-//	int col = 0;
-	int col = 1;
-	double min = (double)MAXIT;
-
-	for (int i=0; i<NFP; i++)
-	{
-		if (abs(z - fps[i]) < min)
-		{
-			min = abs(z - fps[i]);
-			col = i;
-		}
-	}
-
-	return col;
+	gl
+	glBegin(GL_POLYGON);
+	glEnd();
 }
 
 void display(void)
@@ -134,63 +60,9 @@ void display(void)
 
 	setZero(fps);     // 零点のセット
 
-	//////////////////////////////////////////////
-	// 点の描画
-	glBegin(GL_POINTS);
+	// 領域 0 の描画（ \pm4 + \pm 4 i）の枠
+	Reg0();
 
-	double x = (double)(-ZMAX);
-	for (int i=0; i<RMAX; i++)
-	{
-		double y = (double)(-ZMAX);
-		for (int j=0; j<RMAX; j++)
-		{
-			int count;
-			double er;
-			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Nourein(ORD,z0,count,er);
-
-			double brit;
-			if (count > 13)
-				brit = 0.0;
-			else
-				brit = (13.0 - double(count)) / 13.0;
-			// 明るさの補正
-			brit += 0.2;
-
-			switch( FixPoint(z) )  // 塗りつぶし色の設定
-			{
-			case 0:
-				glColor3d(brit,0.0,0.0);
-				break;
-			case 1:
-				glColor3d(0.0,brit,0.0);
-				break;
-			case 2:
-				glColor3d(0.0,0.0,brit);
-				break;
-			case 3:
-				glColor3d(brit,0.0,brit);
-				break;
-			case 4:
-				glColor3d(0.0,brit,brit);
-				break;
-			default:
-				glColor3d(0.0,0.0,0.0);
-				break;
-			}
-
-			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-//			if (count >= MAXIT-1)
-//			{
-//				std::cout << "z0 = " << z0 << ", count = " << count;
-//				std::cout << ", z = " << z << ", bright = " << brit;
-//				std::cout << ", color = " << FixPoint(z) << std::endl;
-//			}
-			y += (double)(2*ZMAX / RMAX);
-		}
-		x += (double)(2*ZMAX / RMAX);
-	}
-	glEnd();
 	glFlush();
 	//////////////////////////////////////////////
 }
