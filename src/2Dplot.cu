@@ -20,7 +20,7 @@
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
-#define ORD  10        // 次数
+#define ORD  32        // 次数
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -109,7 +109,8 @@ template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T>
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-	int col = 0;
+//	int col = 0;
+	int col = 1;
 	double min = (double)MAXIT;
 
 	for (int i=0; i<NFP; i++)
