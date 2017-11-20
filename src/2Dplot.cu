@@ -15,7 +15,7 @@
 
 #include <thrust/complex.h>
 
-#define EPS 0.0000001  // 停止判定
+#define EPS 0.000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
@@ -44,18 +44,21 @@ void setZero( thrust::complex<double> *fps )
 	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
 }
 
+// Polynomial
 template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
 	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
 	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
 }
 
+// derived function of the polynomial
 template<typename T> thrust::complex<T> df( thrust::complex<T> z )
 {
 	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
 	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
 }
 
+// Nourein subfunction
 template<typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
 {
 	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
@@ -72,23 +75,9 @@ template<typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
 		// tmp = -1.0 /  (z_i -z)^{k+1}
 		tmp = -1.0 / tmp;
 
-		f = f + ( 1.0 / df(fps[i]) )*tmp;
+		f += ( 1.0 / df(fps[i]) )*tmp;
 	}
 	return f;
-}
-
-template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
-{
-	count = 0;
-
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
-	{
-		z -= vf(z) / df(z);
-		count++;
-	}
-	er = abs(vf(z));
-
-	return z;
 }
 
 template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, double &er )
@@ -109,8 +98,8 @@ template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T>
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
-//	int col = 0;
-	int col = 1;
+	int col = 0;
+//	int col = 1;
 	double min = (double)MAXIT;
 
 	for (int i=0; i<NFP; i++)
