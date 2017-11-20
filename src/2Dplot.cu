@@ -142,6 +142,7 @@ void Cell4()
 	glVertex2d( -4.0,  0.3 );
 	glEnd();
 }
+
 void display(void)
 {
 	//////////////////////////////////////////////
@@ -150,7 +151,7 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
 	// 領域 0 の描画（ \pm4 + \pm 4 i）の枠
-	Reg0();
+//	Reg0();
 
 	//零点 0 の Voronoi Cell
 	Cell0();
@@ -166,6 +167,16 @@ void display(void)
 
 	//零点 4 の Voronoi Cell
 	Cell4();
+
+	// Z_i の描画
+	for (int i=0; i<NFP; i++)
+	{
+		glColor3d(1.0,1.0,1.0);   // 白の点を描画
+		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
+		glBegin(GL_POINTS);
+		glVertex2d( fps[i].real(), fps[i].imag() );
+		glEnd();
+	}
 
 	glFlush();
 	//////////////////////////////////////////////
