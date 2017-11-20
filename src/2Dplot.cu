@@ -169,17 +169,13 @@ void display(void)
 			}
 
 			glVertex2d( z0.real(), z0.imag() );  // 点の描画
-//			if (count >= MAXIT-1)
-//			{
-//				std::cout << "z0 = " << z0 << ", count = " << count;
-//				std::cout << ", z = " << z << ", bright = " << brit;
-//				std::cout << ", color = " << FixPoint(z) << std::endl;
-//			}
 			y += (double)(2*ZMAX / RMAX);
 		}
 		x += (double)(2*ZMAX / RMAX);
 	}
 	glEnd();
+
+
 	glFlush();
 	//////////////////////////////////////////////
 }
