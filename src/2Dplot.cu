@@ -175,6 +175,15 @@ void display(void)
 	}
 	glEnd();
 
+	// Z_i の描画
+	for (int i=0; i<NFP; i++)
+	{
+		glColor3d(1.0,1.0,1.0);   // 白の点を描画
+		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
+		glBegin(GL_POINTS);
+		glVertex2d( fps[i].real(), fps[i].imag() );
+		glEnd();
+	}
 
 	glFlush();
 	//////////////////////////////////////////////
