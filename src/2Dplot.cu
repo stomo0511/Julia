@@ -163,8 +163,6 @@ void display(void)
 				// 反復回数1回が最も明るく（bright=1）となるように修正（count-1）
 				bright = double(grad - (count-1)) / double(grad);
 			}
-			// 明るさの補正
-//			bright += 0.2;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
