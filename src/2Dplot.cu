@@ -14,49 +14,48 @@
 #include <cassert>
 #include <GLUT/glut.h>
 #include <thrust/complex.h>
-#include <thrust/host_vector.h>
 
 #define EPS 0.000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
-#define ORD  32        // Nourein法の次数
+#define ORD  2        // Nourein法の次数
 
 #define NFP 5 // 零点の数
 thrust::complex<double> fps[NFP];
 
-void setZero( thrust::complex<double> *fps )
+template <typename T> void setZero( thrust::complex<T> *fps )
 {
-	fps[0] = thrust::complex<double> (  0.0,  1.0 );
-	fps[1] = thrust::complex<double> (  1.0,  2.0 );
-	fps[2] = thrust::complex<double> ( -1.0,  2.0 );
-	fps[3] = thrust::complex<double> (  3.0, -3.0 );
-	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
+	fps[0] = thrust::complex<T> (  0.0,  1.0 );
+	fps[1] = thrust::complex<T> (  1.0,  2.0 );
+	fps[2] = thrust::complex<T> ( -1.0,  2.0 );
+	fps[3] = thrust::complex<T> (  3.0, -3.0 );
+	fps[4] = thrust::complex<T> ( -3.0, -3.0 );
 }
 
 // Polynomial
-thrust::complex<double> vf( thrust::complex<double> z )
+template <typename T> thrust::complex<T> vf( thrust::complex<T> z )
 {
-	thrust::complex<double> iu = thrust::complex<double> ( 0.0, 1.0 );
+	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
 	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
 }
 
 // derived function of the polynomial
-thrust::complex<double> df( thrust::complex<double> z )
+template <typename T> thrust::complex<T> df( thrust::complex<T> z )
 {
-	thrust::complex<double> iu = thrust::complex<double> ( 0.0, 1.0 );
+	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
 	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
 }
 
 // Nourein subfunction
-thrust::complex<double> vc( const int K, thrust::complex<double> z )
+template <typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
 {
-	thrust::complex<double> f = thrust::complex<double> (0.0,0.0);;
+	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
 
 	for (int i=0; i<NFP; i++)
 	{
-		thrust::complex<double> tmp = thrust::complex<double> (1.0,0.0);
+		thrust::complex<T> tmp = thrust::complex<T> (1.0,0.0);
 
 		// tmp = (z_i -z)^{k+1}
 		for (int k=0; k<=K; k++)
@@ -71,7 +70,7 @@ thrust::complex<double> vc( const int K, thrust::complex<double> z )
 	return f;
 }
 
-thrust::complex<double> Nourein( const int p, thrust::complex<double> z, int &count, double &er )
+template <typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, T &er )
 {
 	assert(p>=2);
 
@@ -87,38 +86,38 @@ thrust::complex<double> Nourein( const int p, thrust::complex<double> z, int &co
 	return z;
 }
 
-void DrawApollonius( int i, int j, double alp )
-{
-	const int pts = 180;    // 円周上の点数
+//void DrawApollonius( int i, int j, double alp )
+//{
+//	const int pts = 180;    // 円周上の点数
+//
+//	thrust::complex<T> center = (fps[i] - alp*alp*fps[j]) / (1.0 - alp*alp);
+//	double radius = alp*abs(fps[i] - fps[j]) / (1.0 - alp*alp);
+//	double tic = (double)(2.0*M_PI / pts);
+//
+//	// Z_i の描画
+//	glColor3d(1.0,1.0,1.0);   // 白の点を描画
+//	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
+//	glBegin(GL_POINTS);
+//	glVertex2d( fps[i].real(), fps[i].imag() );
+//	glEnd();
+//
+//	// Apollonius円の描画
+//	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+//	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
+//
+//	glBegin(GL_LINE_LOOP);
+//	for (int i=1; i<pts; i++)
+//	{
+//		glVertex2d( center.real() + radius*cos( tic*i )  , center.imag() + radius*sin( tic*i ) );
+//	}
+//	glEnd();
+//	glFlush();
+//}
 
-	thrust::complex<double> center = (fps[i] - alp*alp*fps[j]) / (1.0 - alp*alp);
-	double radius = alp*abs(fps[i] - fps[j]) / (1.0 - alp*alp);
-	double tic = (double)(2.0*M_PI / pts);
-
-	// Z_i の描画
-	glColor3d(1.0,1.0,1.0);   // 白の点を描画
-	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
-	glBegin(GL_POINTS);
-	glVertex2d( fps[i].real(), fps[i].imag() );
-	glEnd();
-
-	// Apollonius円の描画
-	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
-
-	glBegin(GL_LINE_LOOP);
-	for (int i=1; i<pts; i++)
-	{
-		glVertex2d( center.real() + radius*cos( tic*i )  , center.imag() + radius*sin( tic*i ) );
-	}
-	glEnd();
-	glFlush();
-}
-
-int FixPoint( thrust::complex<double> z )
+template <typename T> int FixPoint( thrust::complex<T> z )
 {
 	int col = 0;
-	double min = (double)MAXIT;
+	T min = (T)MAXIT;
 
 	for (int i=0; i<NFP; i++)
 	{
