@@ -95,7 +95,7 @@ void DrawApollonius( int i, int j, double alp )
 	glColor3d(1.0,1.0,1.0);   // 白の点を描画
 	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 	glBegin(GL_POINTS);
-//	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
+	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
 	glEnd();
 
 	// Apollonius円の描画
@@ -136,27 +136,29 @@ void display(void)
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Newton(z0,count,er);
 
-			double brit;
-			if (count > 13)
-				brit = 0.0;
+			int grad = 16;  // 明るさの階調
+			double bright;
+			if (count > grad)
+				bright = 0.0;
 			else
-				brit = (13.0 - double(count)) / 13.0;
-			// 明るさの補正
-			brit += 0.1;
+			{
+				// 反復回数1回が最も明るく（bright=1）となるように修正（count-1）
+				bright = double(grad - (count-1)) / double(grad);
+			}
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
 			case 0:
-				glColor3d(brit,0.0,0.0);
+				glColor3d(bright,0.0,0.0);
 				break;
 			case 1:
-				glColor3d(0.0,brit,0.0);
+				glColor3d(0.0,bright,0.0);
 				break;
 			case 2:
-				glColor3d(0.0,0.0,brit);
+				glColor3d(0.0,0.0,bright);
 				break;
 			case 3:
-				glColor3d(brit,0.0,brit);
+				glColor3d(bright,0.0,bright);
 				break;
 			default:
 				glColor3d(0.0,0.0,0.0);
