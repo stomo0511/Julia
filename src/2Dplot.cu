@@ -94,15 +94,15 @@ void DrawApollonius( int i, int j, double alp )
 {
 	const int pts = 180;    // 円周上の点数
 
-	thrust::complex<double> center = (fps[i] - alp*alp*fps[j]) / (1.0 - alp*alp);
-	double radius = alp*abs(fps[i] - fps[j]) / (1.0 - alp*alp);
+	thrust::complex<double> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+	double radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
 	double tic = (double)(2.0*M_PI / pts);
 
 	// Z_i の描画
 	glColor3d(1.0,1.0,1.0);   // 白の点を描画
 	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 	glBegin(GL_POINTS);
-	glVertex2d( fps[i].real() -XOFS, fps[i].imag() );
+	glVertex2d( Zrs[i].real() -XOFS, Zrs[i].imag() );
 	glEnd();
 
 	// Apollonius円の描画
@@ -183,12 +183,14 @@ void display(void)
 
 	//////////////////////////////////////////////
 	// Apollonius円の描画
-//	double alp = (double)1.0 / (2*NFP - 3.0);
-//
-//	for (int j=1; j<NFP; j++)
-//	{
-//		DrawApollonius( 0, j, alp );
-//	}
+	double alp = (double)1.0 / (2 * Zrs.size() - 3.0);
+
+	int j=0;
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
+	{
+		DrawApollonius( 0, j, alp );
+		j++;
+	}
 }
 
 void resize(int w, int h)
