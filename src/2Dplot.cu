@@ -11,40 +11,42 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
-
+#include <vector>
+#include <GLUT/glut.h>
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 0.8      // 初期値の最大絶対値
 #define ZOOM 600      // 拡大率
-#define RMAX 2000     // 複素平面の分割数
+#define RMAX 1500     // 複素平面の分割数
 #define XOFS 1.0      // x軸のオフセット
 
-#if defined (__APPLE__) || defined(MACOSX)
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #include <GLUT/glut.h>
-  #ifndef glutCloseFunc
-  #define glutCloseFunc glutWMCloseFunc
-  #endif
-#else
-#include <GL/freeglut.h>
-#endif
+// Zeros
+std::vector< thrust::complex<double> > Zrs {
+	thrust::complex<double> (  1.0,  0.0 ),
+	thrust::complex<double> (  0.0,  0.5 ),
+	thrust::complex<double> (  0.0, -0.5 ),
+	thrust::complex<double> ( -1.0,  0.0 )
+};
 
-#define NFP 4  // 不動点の数
-thrust::complex<double> fps[NFP];
+// Coefficients
+std::vector< thrust::complex<double> > Cef {
+	thrust::complex<double> (      1.0, 0.0 ),  // Z^4
+	thrust::complex<double> (      0.0, 0.0 ),  // Z^3
+	thrust::complex<double> ( -3.0/4.0, 0.0 ),  // z^2
+	thrust::complex<double> (      0.0, 0.0 ),  // z^1
+	thrust::complex<double> ( -1.0/4.0, 0.0 )   // z^0
+};
 
-void setZero( thrust::complex<double> *fps )
+template<typename T> thrust::complex<T> vf( thrust::complex<T> cf, thrust::complex<T> z )
 {
-	fps[0] = thrust::complex<double> (  1.0,  0.0 );
-	fps[1] = thrust::complex<double> (  0.0,  0.5 );
-	fps[2] = thrust::complex<double> (  0.0, -0.5 );
-	fps[3] = thrust::complex<double> ( -1.0,  0.0 );
-}
-
-template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
-{
-	return z*z*z*z -(3.0*z*z)/(4.0) -(1.0)/(4.0);
+	thrust::omplex<T> tmp = cf[0];
+    for(auto itr = cf.begin()+1; itr != cf.end(); ++itr)
+    {
+    	tmp = tmp*z + *itr;
+    }
+	return tmp;
 }
 
 template<typename T> thrust::complex<T> df( thrust::complex<T> z )
@@ -201,7 +203,7 @@ void resize(int w, int h)
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitWindowSize(1000,1000);  // 初期Windowサイズ指定
+	glutInitWindowSize(500,500);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
