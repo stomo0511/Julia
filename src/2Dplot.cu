@@ -39,49 +39,54 @@ std::vector< thrust::complex<double> > Cef {
 	thrust::complex<double> ( -1.0/4.0, 0.0 )   // z^0
 };
 
-template<typename T> thrust::complex<T> vf( thrust::complex<T> cf, thrust::complex<T> z )
+// Hornet method for polynomial
+template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::complex<T> z,
+					thrust::complex<T> &vf, thrust::complex<T> &df )
 {
-	thrust::omplex<T> tmp = cf[0];
-    for(auto itr = cf.begin()+1; itr != cf.end(); ++itr)
-    {
-    	tmp = tmp*z + *itr;
-    }
-	return tmp;
-}
+	vf = Cef[0];
+	df = thrust::complex<T> (0.0,0.0);
+	thrust::complex<T> tmp;
 
-template<typename T> thrust::complex<T> df( thrust::complex<T> z )
-{
-	return 4.0*z*z*z - (3.0*z)/(2.0);
+    for(auto itr = Cef.begin()+1; itr < Cef.end(); ++itr)
+    {
+    	tmp = vf;
+    	vf = vf*z + *itr;
+    	df = df*z + tmp;
+    }
 }
 
 template<typename T> thrust::complex<T> Newton( thrust::complex<T> z, int &count, double &er )
 {
-	count = 0;
+	thrust::complex<T> vf, df;
+	Horner( Cef, z, vf, df );
 
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
+	count = 0;
+	while ((count < MAXIT) && (abs(vf) > EPS))
 	{
-		z -= vf(z) / df(z);
+		z -= vf / df;
+		Horner( Cef, z, vf, df );
 		count++;
 	}
-	er = abs(vf(z));
+	er = abs(vf);
 
 	return z;
 }
 
 template<typename T> int FixPoint( thrust::complex<T> z )
 {
+	int i = 0;
 	int col = 0;
 	double min = (double)(MAXIT);
 
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
 	{
-		if (abs(z - fps[i]) < min)
+		if (abs( z - *itr) < min)
 		{
-			min = abs(z - fps[i]);
+			min = abs( z - *itr);
 			col = i;
 		}
+		i++;
 	}
-
 	return col;
 }
 
@@ -119,8 +124,6 @@ void display(void)
 	// 背景を白に
 	glClearColor(1.0, 1.0, 1.0, 1.0); // 塗りつぶしの色を指定（黒）
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
-
-	setZero(fps);      // 零点のセット
 
 	//////////////////////////////////////////////
 	// 点の描画
@@ -180,12 +183,12 @@ void display(void)
 
 	//////////////////////////////////////////////
 	// Apollonius円の描画
-	double alp = (double)1.0 / (2*NFP - 3.0);
-
-	for (int j=1; j<NFP; j++)
-	{
-		DrawApollonius( 0, j, alp );
-	}
+//	double alp = (double)1.0 / (2*NFP - 3.0);
+//
+//	for (int j=1; j<NFP; j++)
+//	{
+//		DrawApollonius( 0, j, alp );
+//	}
 }
 
 void resize(int w, int h)
