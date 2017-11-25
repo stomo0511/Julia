@@ -12,6 +12,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include <algorithm>
+#include <vector>
 #include <GLUT/glut.h>
 #include <thrust/complex.h>
 
@@ -19,73 +21,111 @@
 #define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
-#define RMAX 2000     // 複素平面の分割数
+//#define RMAX 1000     // 複素平面の分割数（ iMacでは 2000 とする）
+#define RMAX 500     // 複素平面の分割数（ iMacでは 2000 とする）
 #define ORD  2        // Nourein法の次数
 
-#define NFP 5 // 零点の数
-thrust::complex<double> fps[NFP];
+// Zeros
+std::vector< thrust::complex<double> > Zrs {
+	thrust::complex<double> (  0.0,  1.0 ),
+	thrust::complex<double> (  1.0,  2.0 ),
+	thrust::complex<double> ( -1.0,  2.0 ),
+	thrust::complex<double> (  3.0, -3.0 ),
+	thrust::complex<double> ( -3.0, -3.0 )
+};
 
-template <typename T> void setZero( thrust::complex<T> *fps )
-{
-	fps[0] = thrust::complex<T> (  0.0,  1.0 );
-	fps[1] = thrust::complex<T> (  1.0,  2.0 );
-	fps[2] = thrust::complex<T> ( -1.0,  2.0 );
-	fps[3] = thrust::complex<T> (  3.0, -3.0 );
-	fps[4] = thrust::complex<T> ( -3.0, -3.0 );
-}
+// Coefficients
+std::vector< thrust::complex<double> > Cef {
+	thrust::complex<double> (  1.0,   0.0 ),  // z^5
+	thrust::complex<double> (  0.0,   1.0 ),  // Z^4
+	thrust::complex<double> (  3.0,   0.0 ),  // Z^3
+	thrust::complex<double> (  0.0,  41.0 ),  // z^2
+	thrust::complex<double> (132.0,   0.0 ),  // z^1
+	thrust::complex<double> (  0.0, -90.0 )   // z^0
+};
 
-// Polynomial
-template <typename T> thrust::complex<T> vf( thrust::complex<T> z )
+// Hornet method for polynomial
+template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::complex<T> z,
+					thrust::complex<T> &vf, thrust::complex<T> &df )
 {
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
-}
+	vf = Cef[0];
+	df = thrust::complex<T> (0.0,0.0);
+	thrust::complex<T> tmp;
 
-// derived function of the polynomial
-template <typename T> thrust::complex<T> df( thrust::complex<T> z )
-{
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
+    for(auto itr = Cef.begin()+1; itr < Cef.end(); ++itr)
+    {
+    	tmp = vf;
+    	vf = vf*z + *itr;
+    	df = df*z + tmp;
+    }
 }
 
 // Nourein subfunction
 template <typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
 {
-	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
+	thrust::complex<T> tmp = thrust::complex<T> (0.0,0.0);;
 
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
 	{
-		thrust::complex<T> tmp = thrust::complex<T> (1.0,0.0);
+		thrust::complex<T> vf, df;
+		Horner( Cef, *itr, vf, df );
 
-		// tmp = (z_i -z)^{k+1}
-		for (int k=0; k<=K; k++)
-		{
-			tmp = tmp * (fps[i] - z);
-		}
-		// tmp = -1.0 /  (z_i -z)^{k+1}
-		tmp = -1.0 / tmp;
-
-		f += ( 1.0 / df(fps[i]) )*tmp;
+		// tmp *= (1/f'(z_i) (-1 / (z_i -z)^{K+1})
+		tmp += ( (T)(1.0) / df )*( (T)(-1.0) / pow( (*itr - z), (T)(K+1) ));
 	}
-	return f;
+	return tmp;
 }
 
 template <typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, T &er )
 {
 	assert(p>=2);
 
+	thrust::complex<T> vf, df;
+	Horner( Cef, z, vf, df );
 	count = 0;
 
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
+	while ((count < MAXIT) && (abs(vf) > EPS))
 	{
 		z += vc(p-2,z) / vc(p-1,z);
+		Horner( Cef, z, vf, df );
 		count++;
 	}
-	er = abs(vf(z));
+	er = abs(vf);
 
 	return z;
 }
 
+template <typename T> void SetGamma( std::vector<T> &Gam )
+{
+	for (int i=0; i<Zrs.size(); i++)
+	{
+		T max = (T)(0.0);
+		for (int j=0; j<Zrs.size(); j++)
+		{
+			if (i != j)
+			{
+				thrust::complex<T> vf, dfi, dfj;
+
+				Horner( Cef, Zrs[i], vf, dfi );
+				Horner( Cef, Zrs[j], vf, dfj );
+
+				if (max < abs(dfi / dfj))
+				{
+					max = abs(dfi / dfj);
+				}
+			}
+		}
+		Gam[i] = max;
+	}
+}
+
+template <typename T> void GetAlpha( std::vector<T> Gam, std::vector<T> &Alp )
+{
+	for (int i=0; i<Zrs.size(); i++)
+	{
+		(Zrs.size() -1.0);
+	}
+}
 //void DrawApollonius( int i, int j, double alp )
 //{
 //	const int pts = 180;    // 円周上の点数
@@ -116,18 +156,19 @@ template <typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T
 
 template <typename T> int FixPoint( thrust::complex<T> z )
 {
+	int i = 0;
 	int col = 0;
-	T min = (T)MAXIT;
+	double min = (double)(MAXIT);
 
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
 	{
-		if (abs(z - fps[i]) < min)
+		if (abs( z - *itr) < min)
 		{
-			min = abs(z - fps[i]);
+			min = abs( z - *itr);
 			col = i;
 		}
+		i++;
 	}
-
 	return col;
 }
 
@@ -135,7 +176,7 @@ void display(void)
 {
 	//////////////////////////////////////////////
 	// 背景を白に
-	glClearColor(1.0, 1.0, 1.0, 1.0); // 塗りつぶしの色を指定
+	glClearColor(0.0, 0.0, 0.0, 0.0); // 塗りつぶしの色を指定
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
 
 	//////////////////////////////////////////////
@@ -195,12 +236,12 @@ void display(void)
 
 	//////////////////////////////////////////////
 	// 零点の描画
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr)
 	{
 		glColor3d(1.0,1.0,1.0);   // 白の点を描画
 		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 		glBegin(GL_POINTS);
-		glVertex2d( fps[i].real(), fps[i].imag() );
+		glVertex2d( (*itr).real(), (*itr).imag() );
 		glEnd();
 	}
 	//////////////////////////////////////////////
@@ -223,7 +264,13 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
-	setZero(fps);     // 零点のセット
+	std::vector<double> Gam( Zrs.size() );
+	SetGamma( Gam );
+
+    for(auto itr = Gam.begin(); itr < Gam.end(); ++itr)
+    {
+    	std::cout << *itr << std::endl;
+    }
 
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
