@@ -90,13 +90,13 @@ template<typename T> int FixPoint( thrust::complex<T> z )
 	return col;
 }
 
-void DrawApollonius( int i, int j, double alp )
+template<typename T> void DrawApollonius( int i, int j, T alp )
 {
 	const int pts = 180;    // 円周上の点数
 
-	thrust::complex<double> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-	double radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-	double tic = (double)(2.0*M_PI / pts);
+	thrust::complex<T> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+	T radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+	T tic = (T)(2.0*M_PI / pts);
 
 	// Z_i の描画
 	glColor3d(1.0,1.0,1.0);   // 白の点を描画
