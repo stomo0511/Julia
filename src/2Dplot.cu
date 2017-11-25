@@ -22,8 +22,8 @@
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 //#define RMAX 1000     // 複素平面の分割数（ iMacでは 2000 とする）
-#define RMAX 500     // 複素平面の分割数（ iMacでは 2000 とする）
-#define ORD  2        // Nourein法の次数
+#define RMAX 400     // 複素平面の分割数（ iMacでは 2000 とする）
+#define ORD  4        // Nourein法の次数
 
 // Zeros
 std::vector< thrust::complex<double> > Zrs {
@@ -43,6 +43,9 @@ std::vector< thrust::complex<double> > Cef {
 	thrust::complex<double> (132.0,   0.0 ),  // z^1
 	thrust::complex<double> (  0.0, -90.0 )   // z^0
 };
+
+std::vector<double> Gam( Zrs.size() );  // Γ
+std::vector<double> Alp( Zrs.size() );  // α
 
 // Hornet method for polynomial
 template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::complex<T> z,
@@ -119,40 +122,62 @@ template <typename T> void SetGamma( std::vector<T> &Gam )
 	}
 }
 
-template <typename T> void GetAlpha( std::vector<T> Gam, std::vector<T> &Alp )
+template <typename T> T fAlp( const int p, const T Gamma, T alp )
+{
+	assert(p>=2);
+
+	return ((T)(Zrs.size()) -1.0) * Gamma * pow(alp,(T)(p-1)) - (1.0-alp)/(1.0+3.0*alp);
+}
+
+template <typename T> T dAlp( const int p, const T Gamma, T alp )
+{
+	assert(p>=2);
+
+	T tmp = ((T)(Zrs.size()) -1.0) * Gamma * ((T)(p) -1.0) * pow(alp,(T)(p-2));
+	return  tmp + 4.0/(1.0+6.0*alp+9.0*alp*alp);
+}
+
+template <typename T> void GetAlpha( const std::vector<T> Gam, std::vector<T> &Alp )
 {
 	for (int i=0; i<Zrs.size(); i++)
 	{
-		(Zrs.size() -1.0);
+		T alp = (T)(1.0);
+		int count = 0;
+
+		while ((count < MAXIT) && (abs(fAlp(ORD,Gam[i],alp)) > EPS))
+		{
+			alp -= fAlp(ORD,Gam[i],alp) / dAlp(ORD,Gam[i],alp);
+			count++;
+		}
+		if (count == MAXIT)
+		{
+			std::cerr << "No convergence in GetAlpha\n";
+			std::exit (EXIT_FAILURE);
+		}
+		Alp[i] = alp;
 	}
 }
-//void DrawApollonius( int i, int j, double alp )
-//{
-//	const int pts = 180;    // 円周上の点数
-//
-//	thrust::complex<T> center = (fps[i] - alp*alp*fps[j]) / (1.0 - alp*alp);
-//	double radius = alp*abs(fps[i] - fps[j]) / (1.0 - alp*alp);
-//	double tic = (double)(2.0*M_PI / pts);
-//
-//	// Z_i の描画
-//	glColor3d(1.0,1.0,1.0);   // 白の点を描画
-//	glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
-//	glBegin(GL_POINTS);
-//	glVertex2d( fps[i].real(), fps[i].imag() );
-//	glEnd();
-//
-//	// Apollonius円の描画
-//	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-//	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
-//
-//	glBegin(GL_LINE_LOOP);
-//	for (int i=1; i<pts; i++)
-//	{
-//		glVertex2d( center.real() + radius*cos( tic*i )  , center.imag() + radius*sin( tic*i ) );
-//	}
-//	glEnd();
-//	glFlush();
-//}
+
+template <typename T> void DrawApollonius( const int i, const int j, const T alp )
+{
+	const int pts = 180;    // 円周上の点数
+
+	thrust::complex<T> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+	double radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+	double tic = (double)(2.0*M_PI / pts);
+
+	// Apollonius円の描画
+	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+	glLineWidth(1.0);         // 線の太さ（ディフォルトは1.0）
+
+	glBegin(GL_LINE_LOOP);
+	for (int i=1; i<pts; i++)
+	{
+		glVertex2d( center.real() + radius*cos( tic*i )  , center.imag() + radius*sin( tic*i ) );
+	}
+	glEnd();
+	glFlush();
+}
 
 template <typename T> int FixPoint( thrust::complex<T> z )
 {
@@ -246,8 +271,22 @@ void display(void)
 	}
 	//////////////////////////////////////////////
 
-	glFlush();
+	//////////////////////////////////////////////
+	// Apolloniusの描画
+	SetGamma( Gam );       // Γ
+	GetAlpha( Gam, Alp );  // α
+//	for (int i=0; i<Zrs.size(); i++)
+	int i=0;
+	{
+		for (int j=0; j<Zrs.size(); j++)
+		{
+			if (i!=j)
+				DrawApollonius(i,j,Alp[i]);
+		}
+	}
+	//////////////////////////////////////////////
 
+	glFlush();
 }
 
 void resize(int w, int h)
@@ -264,14 +303,6 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
-	std::vector<double> Gam( Zrs.size() );
-	SetGamma( Gam );
-
-    for(auto itr = Gam.begin(); itr < Gam.end(); ++itr)
-    {
-    	std::cout << *itr << std::endl;
-    }
-
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
