@@ -22,8 +22,9 @@
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 //#define RMAX 1000     // 複素平面の分割数（ iMacでは 2000 とする）
-#define RMAX 400     // 複素平面の分割数（ iMacでは 2000 とする）
-#define ORD  4        // Nourein法の次数
+#define RMAX 100     // 複素平面の分割数（ iMacでは 2000 とする）
+
+int P;  // Nourein法の次数
 
 // Zeros
 std::vector< thrust::complex<double> > Zrs {
@@ -144,9 +145,9 @@ template <typename T> void GetAlpha( const std::vector<T> Gam, std::vector<T> &A
 		T alp = (T)(1.0);
 		int count = 0;
 
-		while ((count < MAXIT) && (abs(fAlp(ORD,Gam[i],alp)) > EPS))
+		while ((count < MAXIT) && (abs(fAlp(P,Gam[i],alp)) > EPS))
 		{
-			alp -= fAlp(ORD,Gam[i],alp) / dAlp(ORD,Gam[i],alp);
+			alp -= fAlp(P,Gam[i],alp) / dAlp(P,Gam[i],alp);
 			count++;
 		}
 		if (count == MAXIT)
@@ -217,7 +218,7 @@ void display(void)
 			int count;
 			double er;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Nourein(ORD,z0,count,er);
+			thrust::complex<double> z = Nourein(P,z0,count,er);
 
 			int grad = 16;  // 明るさの階調
 			double bright;
@@ -303,6 +304,13 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
+	if (argc<2)
+	{
+		std::cerr << "Usage: a.out [Order]\n";
+		exit (EXIT_FAILURE);
+	}
+	P = atoi(argv[1]);  // Order of Nourein method
+
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
