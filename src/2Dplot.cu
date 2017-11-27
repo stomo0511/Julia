@@ -22,7 +22,7 @@
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 //#define RMAX 1000     // 複素平面の分割数（ iMacでは 2000 とする）
-#define RMAX 100     // 複素平面の分割数（ iMacでは 2000 とする）
+#define RMAX 500     // 複素平面の分割数（ iMacでは 2000 とする）
 
 int P;  // Nourein法の次数
 
