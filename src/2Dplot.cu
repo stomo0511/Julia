@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 		std::cerr << "Usage: a.out [Order]\n";
 		exit (EXIT_FAILURE);
 	}
-	P = atoi(argv[1]);  // Order of Nourein method
+	P = atoi(argv[1]);  // Nourein法の次数
 
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
