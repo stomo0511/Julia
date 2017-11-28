@@ -183,9 +183,9 @@ template <typename T> void DrawApRegion( const T alp )
 {
 	// Apollonius領域の描画
 	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0
+	glLineWidth(4.0);         // 線の太さ（ディフォルトは1.0）
 
-	const int pts = 120;    // 円周上の点数
+	const int pts = 20;    // 円周上の点数
 	thrust::complex<T> center;
 	T radius;
 	T start, end, tic;
@@ -193,37 +193,37 @@ template <typename T> void DrawApRegion( const T alp )
 	int i, j;
 
 	// p=2
-	{
-		// z_0, z_1
-		i = 0; j=1;
-		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-		start = -1.41075;
-		tic = -2.0*start / pts;
-
-		glBegin(GL_LINE_STRIP);
-		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-		for (int t=1; t<=pts; t++)
-		{
-			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-		}
-		glEnd();
-
-		// z_0, z_2
-		i = 0; j=2;
-		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-		start = 1.73084;
-		tic = 2.0*(M_PI - start) / pts;
-
-		glBegin(GL_LINE_STRIP);
-		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-		for (int t=1; t<=pts; t++)
-		{
-			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-		}
-		glEnd();
-	}
+//	{
+//		// z_0, z_1
+//		i = 0; j=1;
+//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+//		start = -1.41075;
+//		tic = -2.0*start / pts;
+//
+//		glBegin(GL_LINE_STRIP);
+//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+//		for (int t=1; t<=pts; t++)
+//		{
+//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+//		}
+//		glEnd();
+//
+//		// z_0, z_2
+//		i = 0; j=2;
+//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+//		start = 1.73084;
+//		tic = 2.0*(M_PI - start) / pts;
+//
+//		glBegin(GL_LINE_STRIP);
+//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+//		for (int t=1; t<=pts; t++)
+//		{
+//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+//		}
+//		glEnd();
+//	}
 
 	// p=4
 //	{
@@ -359,71 +359,71 @@ template <typename T> void DrawApRegion( const T alp )
 //	}
 
 	// p=32
-//	{
-//		// z_0, z_1
-//		i = 0; j=1;
-//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-//		start = 0.325413;
-//		end   = 0.902587;
-//		tic = (end - start) / pts;
-//
-//		glBegin(GL_LINE_STRIP);
-//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-//		for (int t=1; t<=pts; t++)
-//		{
-//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-//		}
-//		glEnd();
-//
-//		// z_0, z_2
-//		i = 0; j=2;
-//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-//		start =  2.23901;
-//		end   =  2.81618;
-//		tic = (end - start) / pts;
-//
-//		glBegin(GL_LINE_STRIP);
-//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-//		for (int t=1; t<=pts; t++)
-//		{
-//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-//		}
-//		glEnd();
-//
-//		// z_0, z_3
-//		i = 0; j=3;
-//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-//		start = -0.903981;
-//		end   = -1.01722;
-//		tic = (end - start) / pts;
-//
-//		glBegin(GL_LINE_STRIP);
-//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-//		for (int t=1; t<=pts; t++)
-//		{
-//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-//		}
-//		glEnd();
-//
-//		// z_0, z_4
-//		i = 0; j=4;
-//		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
-//		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-//		start = -2.12437;
-//		end   = -2.23761;
-//		tic = (end - start) / pts;
-//
-//		glBegin(GL_LINE_STRIP);
-//		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
-//		for (int t=1; t<=pts; t++)
-//		{
-//			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
-//		}
-//		glEnd();
-//	}
+	{
+		// z_0, z_1
+		i = 0; j=1;
+		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+		start = 0.325413;
+		end   = 0.902587;
+		tic = (end - start) / pts;
+
+		glBegin(GL_LINE_STRIP);
+		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+		for (int t=1; t<=pts; t++)
+		{
+			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+		}
+		glEnd();
+
+		// z_0, z_2
+		i = 0; j=2;
+		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+		start =  2.23901;
+		end   =  2.81618;
+		tic = (end - start) / pts;
+
+		glBegin(GL_LINE_STRIP);
+		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+		for (int t=1; t<=pts; t++)
+		{
+			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+		}
+		glEnd();
+
+		// z_0, z_3
+		i = 0; j=3;
+		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+		start = -0.903981;
+		end   = -1.01722;
+		tic = (end - start) / pts;
+
+		glBegin(GL_LINE_STRIP);
+		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+		for (int t=1; t<=pts; t++)
+		{
+			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+		}
+		glEnd();
+
+		// z_0, z_4
+		i = 0; j=4;
+		center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
+		radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
+		start = -2.12437;
+		end   = -2.23761;
+		tic = (end - start) / pts;
+
+		glBegin(GL_LINE_STRIP);
+		glVertex2d( center.real() + radius*cos(start), center.imag() + radius*sin(start) );
+		for (int t=1; t<=pts; t++)
+		{
+			glVertex2d( center.real() + radius*cos( start+tic*t )  , center.imag() + radius*sin( start+tic*t ) );
+		}
+		glEnd();
+	}
 	glFlush();
 }
 
