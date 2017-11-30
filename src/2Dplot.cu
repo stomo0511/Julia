@@ -12,25 +12,12 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
-
+#include <GLUT/glut.h>
 #include <thrust/complex.h>
 
-#define EPS 0.000001  // 停止判定
-#define MAXIT 30      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
-#define ORD  32       // 次数
-
-#if defined (__APPLE__) || defined(MACOSX)
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #include <GLUT/glut.h>
-  #ifndef glutCloseFunc
-  #define glutCloseFunc glutWMCloseFunc
-  #endif
-#else
-#include <GL/freeglut.h>
-#endif
 
 #define NFP 5 // 零点の数
 thrust::complex<double> fps[NFP];
@@ -219,7 +206,7 @@ int main(int argc, char *argv[])
 	std::cout << "(2,4) の垂直二等分線の傾き : " << a << ", 切片 : " << b << std::endl;
 
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
+	glutInitWindowSize(1000,1000);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
