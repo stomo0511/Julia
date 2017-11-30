@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include <vector>
 #include <GLUT/glut.h>
 #include <thrust/complex.h>
 
@@ -19,24 +20,21 @@
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
 
-#define NFP 5 // 零点の数
-thrust::complex<double> fps[NFP];
-
-void setZero( thrust::complex<double> *fps )
-{
-	fps[0] = thrust::complex<double> (  0.0,  1.0 );
-	fps[1] = thrust::complex<double> (  1.0,  2.0 );
-	fps[2] = thrust::complex<double> ( -1.0,  2.0 );
-	fps[3] = thrust::complex<double> (  3.0, -3.0 );
-	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
-}
+// Zeros
+std::vector< thrust::complex<double> > Zrs {
+	thrust::complex<double> (  0.0,  1.0 ),
+	thrust::complex<double> (  1.0,  2.0 ),
+	thrust::complex<double> ( -1.0,  2.0 ),
+	thrust::complex<double> (  3.0, -3.0 ),
+	thrust::complex<double> ( -3.0, -3.0 )
+};
 
 void PBisec( const int i, const int j, double &a, double &b )
 {
-	const double a1 = fps[i].real();
-	const double a2 = fps[j].real();
-	const double b1 = fps[i].imag();
-	const double b2 = fps[j].imag();
+	const double a1 = Zrs[i].real();
+	const double a2 = Zrs[j].real();
+	const double b1 = Zrs[i].imag();
+	const double b2 = Zrs[j].imag();
 
 //	std::cout << "a1 = " << a1 << ", b1 = " << b1 << ", a2 = " << a2 << ", b2 = " << b2 << std::endl;
 
@@ -156,12 +154,12 @@ void display(void)
 	Cell4();
 
 	// Z_i の描画
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); itr++)
 	{
 		glColor3d(1.0,1.0,1.0);   // 白の点を描画
 		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 		glBegin(GL_POINTS);
-		glVertex2d( fps[i].real(), fps[i].imag() );
+		glVertex2d( (*itr).real(), (*itr).imag() );
 		glEnd();
 	}
 
@@ -183,8 +181,6 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
-	setZero(fps);     // 零点のセット
-
 	// 垂直二等分線
 	double a, b;
 	PBisec( 0, 1, a, b );
