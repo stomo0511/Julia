@@ -24,6 +24,7 @@
 #define RMAX 1000     // 複素平面の分割数
 
 int P;  // Nourein法の次数
+double R;  // 相対距離比
 
 // Zeros
 std::vector< thrust::complex<double> > Zrs {
@@ -183,7 +184,7 @@ template <typename T> void DrawApRegion( const T alp )
 {
 	// Apollonius領域の描画
 	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(4.0);         // 線の太さ（ディフォルトは1.0）
+	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
 
 	const int pts = 20;    // 円周上の点数
 	thrust::complex<T> center;
@@ -427,6 +428,33 @@ template <typename T> void DrawApRegion( const T alp )
 	glFlush();
 }
 
+template <typename T> T RelDist( const int i, const thrust::complex<T> z )
+{
+	T max = 0.0;
+
+	int j = 0;
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
+	{
+		if ( i != j )
+		{
+			T tmp = abs(z - Zrs[i]) / abs(z - *itr);
+			if (tmp > max)
+				max = tmp;
+		}
+		j++;
+	}
+	return max;
+}
+
+template <typename T> T RatioRD( const int i, const int p, const thrust::complex<T> z )
+{
+	assert(p>=2);
+
+	thrust::complex<T> nz = z + vc(p-2,z) / vc(p-1,z);
+
+	return ( RelDist(i,nz) / RelDist(i,z) );
+}
+
 template <typename T> int FixPoint( thrust::complex<T> z )
 {
 	int i = 0;
@@ -467,14 +495,21 @@ void display(void)
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
 			thrust::complex<double> z = Nourein(P,z0,count,er);
 
-			double bright;
-			if (count > MAXIT)
+			double bright = RatioRD( FixPoint(z), P, z0 );
+//			std::cout << bright << ", ";
+			if (bright > 1.0)
+			{
 				bright = 0.0;
+			}
+			else if (bright <= R)
+			{
+				bright = 1.0;
+			}
 			else
 			{
-				// 反復回数1回が最も明るく（bright=1）となるように修正（count-1）
-				bright = double(MAXIT - (count-1)) / double(MAXIT);
+				bright = 0.9*(1.0 - bright) / (1.0 - R);
 			}
+//			std::cout << bright << std::endl;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -557,12 +592,13 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
-	if (argc<2)
+	if (argc<3)
 	{
-		std::cerr << "Usage: a.out [Order]\n";
+		std::cerr << "Usage: a.out [Order] [R]\n";
 		exit (EXIT_FAILURE);
 	}
 	P = atoi(argv[1]);  // Nourein法の次数
+	R = atof(argv[2]);  // 相対距離比
 
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
