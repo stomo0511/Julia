@@ -48,14 +48,16 @@ std::vector<double> Gam( Zrs.size() );  // Γ
 std::vector<double> Alp( Zrs.size() );  // α
 
 // Hornet method for polynomial
-template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::complex<T> z,
-					thrust::complex<T> &vf, thrust::complex<T> &df )
+template<typename T> void Horner(
+		const std::vector< thrust::complex<T> > cf,
+		const thrust::complex<T> z,
+		thrust::complex<T> &vf, thrust::complex<T> &df )
 {
-	vf = Cef[0];
+	vf = cf[0];
 	df = thrust::complex<T> (0.0,0.0);
 	thrust::complex<T> tmp;
 
-    for(auto itr = Cef.begin()+1; itr < Cef.end(); ++itr)
+    for(auto itr = cf.begin()+1; itr < cf.end(); ++itr)
     {
     	tmp = vf;
     	vf = vf*z + *itr;
@@ -64,33 +66,42 @@ template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::
 }
 
 // Nourein subfunction
-template <typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
+template <typename T> thrust::complex<T> Chi_m(
+		const std::vector< thrust::complex<T> > zr,
+		const std::vector< thrust::complex<T> > cf,
+		const int m,
+		const thrust::complex<T> z )
 {
-	thrust::complex<T> tmp = thrust::complex<T> (0.0,0.0);;
+	thrust::complex<T> tmp = thrust::complex<T> (0.0,0.0);
 
-	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
+	for (auto itr = zr.begin(); itr < zr.end(); ++itr )
 	{
 		thrust::complex<T> vf, df;
-		Horner( Cef, *itr, vf, df );
+		Horner( cf, *itr, vf, df );
 
-		// tmp *= (1/f'(z_i) (-1 / (z_i -z)^{K+1})
-		tmp += ( (T)(1.0) / df )*( (T)(-1.0) / pow( (*itr - z), (T)(K+1) ));
+		// tmp *= (1/f'(z_i) (-1 / (z_i -z)^{m+1})
+		tmp += ( (T)(1.0) / df )*( (T)(-1.0) / pow( (*itr - z), (T)(m+1) ));
 	}
 	return tmp;
 }
 
-template <typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, T &er )
+template <typename T> thrust::complex<T> Nourein(
+		const std::vector< thrust::complex<T> > zr,
+		const std::vector< thrust::complex<T> > cf,
+		const int p,
+		thrust::complex<T> z,
+		int &count, T &er )
 {
 	assert(p>=2);
 
 	thrust::complex<T> vf, df;
-	Horner( Cef, z, vf, df );
+	Horner( cf, z, vf, df );
 	count = 0;
 
 	while ((count < MAXIT) && (abs(vf) > EPS))
 	{
-		z += vc(p-2,z) / vc(p-1,z);
-		Horner( Cef, z, vf, df );
+		z += Chi_m(zr,cf,p-2,z) / Chi_m(zr,cf,p-1,z);
+		Horner( cf, z, vf, df );
 		count++;
 	}
 	er = abs(vf);
@@ -183,7 +194,7 @@ template <typename T> void DrawApRegion( const T alp )
 {
 	// Apollonius領域の描画
 	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(4.0);         // 線の太さ（ディフォルトは1.0）
+	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
 
 	const int pts = 20;    // 円周上の点数
 	thrust::complex<T> center;
@@ -456,6 +467,9 @@ void display(void)
 	// 点の描画
 	glBegin(GL_POINTS);
 
+	double min = (double)(MAXIT);
+	double max = 0.0;
+
 	double x = (double)(-ZMAX);
 	for (int i=0; i<RMAX; i++)
 	{
@@ -465,7 +479,7 @@ void display(void)
 			int count;
 			double er;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Nourein(P,z0,count,er);
+			thrust::complex<double> z = Nourein(Zrs,Cef,P,z0,count,er);
 
 			double bright;
 			if (count > MAXIT)
@@ -473,8 +487,14 @@ void display(void)
 			else
 			{
 				// 反復回数1回が最も明るく（bright=1）となるように修正（count-1）
-				bright = double(MAXIT - (count-1)) / double(MAXIT);
+				//bright = double(MAXIT - (count-1)) / double(MAXIT);
+				bright = double(MAXIT - (count)) / double(MAXIT);
 			}
+			std::cout << bright << std::endl;
+			if (bright > max)
+				max = bright;
+			if (bright < min)
+				min = bright;
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
@@ -504,6 +524,7 @@ void display(void)
 		x += (double)(2*ZMAX / RMAX);
 	}
 	glEnd();
+	std::cout << "min = " << min << ", max = " << max << std::endl;
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
