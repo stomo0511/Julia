@@ -215,19 +215,17 @@ template <typename T> void GetAlpha( const std::vector<T> Gam, std::vector<T> &A
 // Apollonius円の描画
 template <typename T> void DrawApollonius( const int i, const int j, const T alp )
 {
+	assert(alp<1.0);
+
 	thrust::complex<T> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
 	double radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
 
-	Circle2D( radius, center.real(), center.imag() );
+	Circle2D( radius, (int)(center.real()), (int)(center.imag()) );
 }
 
 // Apollonius領域の描画
 template <typename T> void DrawApRegion( const T alp )
 {
-	// Apollonius領域の描画
-	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(2.0);         // 線の太さ（縮小時は4.0にする）
-
 	const int pts = 20;    // 円周上の点数
 	thrust::complex<T> center;
 	T radius;
@@ -588,6 +586,8 @@ void display(void)
 	SetGamma( Gam );       // Γ
 	GetAlpha( Gam, Alp );  // α
 
+	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+	glLineWidth(2.0);         // 線の太さ（縮小時は4.0にする）
 	DrawApRegion( Alp[0] );
 	//////////////////////////////////////////////
 
