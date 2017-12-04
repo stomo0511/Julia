@@ -194,7 +194,7 @@ template <typename T> void DrawApRegion( const T alp )
 {
 	// Apollonius領域の描画
 	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(2.0);         // 線の太さ（ディフォルトは1.0）
+	glLineWidth(2.0);         // 線の太さ（縮小時は4.0にする）
 
 	const int pts = 20;    // 円周上の点数
 	thrust::complex<T> center;
@@ -456,6 +456,49 @@ template <typename T> int FixPoint( thrust::complex<T> z )
 	return col;
 }
 
+// 円の描画
+template <typename T> void Circle2D(T r,int x,int y)
+{
+	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
+	{
+		T th2 = th1 + 10.0;
+		T th1_rad = th1 / 180.0 * M_PI;
+		T th2_rad = th2 / 180.0 * M_PI;
+
+		T x1 = r * cos(th1_rad);
+		T y1 = r * sin(th1_rad);
+		T x2 = r * cos(th2_rad);
+		T y2 = r * sin(th2_rad);
+
+		glBegin(GL_LINES);
+		glVertex2f( x1+x, y1+y );
+		glVertex2f( x2+x, y2+y );
+		glEnd();
+	}
+}
+
+// 円の描画（塗りつぶし）
+template <typename T> void Circle2DFill(T r,int x,int y)
+{
+	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
+	{
+		T th2 = th1 + 10.0;
+		T th1_rad = th1 / 180.0 * M_PI;
+		T th2_rad = th2 / 180.0 * M_PI;
+
+		T x1 = r * cos(th1_rad);
+		T y1 = r * sin(th1_rad);
+		T x2 = r * cos(th2_rad);
+		T y2 = r * sin(th2_rad);
+
+		glBegin(GL_TRIANGLES);
+		glVertex2f( x, y );
+		glVertex2f( x1+x, y1+y );
+		glVertex2f( x2+x, y2+y );
+		glEnd();
+	}
+}
+
 void display(void)
 {
 	//////////////////////////////////////////////
@@ -490,7 +533,7 @@ void display(void)
 				//bright = double(MAXIT - (count-1)) / double(MAXIT);
 				bright = double(MAXIT - (count)) / double(MAXIT);
 			}
-			std::cout << bright << std::endl;
+//			std::cout << bright << std::endl;
 			if (bright > max)
 				max = bright;
 			if (bright < min)
@@ -524,19 +567,15 @@ void display(void)
 		x += (double)(2*ZMAX / RMAX);
 	}
 	glEnd();
-	std::cout << "min = " << min << ", max = " << max << std::endl;
+//	std::cout << "min = " << min << ", max = " << max << std::endl;
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
 	// 零点の描画
+	glColor3d(1.0,1.0,1.0);   // 白の点を描画
+	glPointSize(1.0);
 	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr)
-	{
-		glColor3d(1.0,1.0,1.0);   // 白の点を描画
-		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
-		glBegin(GL_POINTS);
-		glVertex2d( (*itr).real(), (*itr).imag() );
-		glEnd();
-	}
+		Circle2DFill( (double)(0.05), (*itr).real(), (*itr).imag() );
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
@@ -586,7 +625,7 @@ int main(int argc, char *argv[])
 	P = atoi(argv[1]);  // Nourein法の次数
 
 	glutInit(&argc, argv);          // OpenGL初期化
-	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
+	glutInitWindowSize(1000,1000);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
 	glutDisplayFunc(display);       // Windowに描画
 	glutReshapeFunc(resize);
