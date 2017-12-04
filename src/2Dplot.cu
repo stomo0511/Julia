@@ -109,6 +109,49 @@ template <typename T> thrust::complex<T> Nourein(
 	return z;
 }
 
+// 円の描画
+template <typename T> void Circle2D(T r,int x,int y)
+{
+	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
+	{
+		T th2 = th1 + 10.0;
+		T th1_rad = th1 / 180.0 * M_PI;
+		T th2_rad = th2 / 180.0 * M_PI;
+
+		T x1 = r * cos(th1_rad);
+		T y1 = r * sin(th1_rad);
+		T x2 = r * cos(th2_rad);
+		T y2 = r * sin(th2_rad);
+
+		glBegin(GL_LINES);
+		glVertex2f( x1+x, y1+y );
+		glVertex2f( x2+x, y2+y );
+		glEnd();
+	}
+}
+
+// 円の描画（塗りつぶし）
+template <typename T> void Circle2DFill(T r,int x,int y)
+{
+	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
+	{
+		T th2 = th1 + 10.0;
+		T th1_rad = th1 / 180.0 * M_PI;
+		T th2_rad = th2 / 180.0 * M_PI;
+
+		T x1 = r * cos(th1_rad);
+		T y1 = r * sin(th1_rad);
+		T x2 = r * cos(th2_rad);
+		T y2 = r * sin(th2_rad);
+
+		glBegin(GL_TRIANGLES);
+		glVertex2f( x, y );
+		glVertex2f( x1+x, y1+y );
+		glVertex2f( x2+x, y2+y );
+		glEnd();
+	}
+}
+
 template <typename T> void SetGamma( std::vector<T> &Gam )
 {
 	for (int i=0; i<Zrs.size(); i++)
@@ -169,27 +212,16 @@ template <typename T> void GetAlpha( const std::vector<T> Gam, std::vector<T> &A
 	}
 }
 
+// Apollonius円の描画
 template <typename T> void DrawApollonius( const int i, const int j, const T alp )
 {
-	const int pts = 180;    // 円周上の点数
-
 	thrust::complex<T> center = (Zrs[i] - alp*alp*Zrs[j]) / (1.0 - alp*alp);
 	double radius = alp*abs(Zrs[i] - Zrs[j]) / (1.0 - alp*alp);
-	double tic = (double)(2.0*M_PI / pts);
 
-	// Apollonius円の描画
-	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(1.0);         // 線の太さ（ディフォルトは1.0）
-
-	glBegin(GL_LINE_LOOP);
-	for (int i=1; i<pts; i++)
-	{
-		glVertex2d( center.real() + radius*cos( tic*i )  , center.imag() + radius*sin( tic*i ) );
-	}
-	glEnd();
-	glFlush();
+	Circle2D( radius, center.real(), center.imag() );
 }
 
+// Apollonius領域の描画
 template <typename T> void DrawApRegion( const T alp )
 {
 	// Apollonius領域の描画
@@ -435,7 +467,6 @@ template <typename T> void DrawApRegion( const T alp )
 //		}
 //		glEnd();
 //	}
-	glFlush();
 }
 
 template <typename T> int FixPoint( thrust::complex<T> z )
@@ -454,49 +485,6 @@ template <typename T> int FixPoint( thrust::complex<T> z )
 		i++;
 	}
 	return col;
-}
-
-// 円の描画
-template <typename T> void Circle2D(T r,int x,int y)
-{
-	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
-	{
-		T th2 = th1 + 10.0;
-		T th1_rad = th1 / 180.0 * M_PI;
-		T th2_rad = th2 / 180.0 * M_PI;
-
-		T x1 = r * cos(th1_rad);
-		T y1 = r * sin(th1_rad);
-		T x2 = r * cos(th2_rad);
-		T y2 = r * sin(th2_rad);
-
-		glBegin(GL_LINES);
-		glVertex2f( x1+x, y1+y );
-		glVertex2f( x2+x, y2+y );
-		glEnd();
-	}
-}
-
-// 円の描画（塗りつぶし）
-template <typename T> void Circle2DFill(T r,int x,int y)
-{
-	for (T th1 = 0.0;  th1 <= 360.0;  th1 = th1 + 1.0)
-	{
-		T th2 = th1 + 10.0;
-		T th1_rad = th1 / 180.0 * M_PI;
-		T th2_rad = th2 / 180.0 * M_PI;
-
-		T x1 = r * cos(th1_rad);
-		T y1 = r * sin(th1_rad);
-		T x2 = r * cos(th2_rad);
-		T y2 = r * sin(th2_rad);
-
-		glBegin(GL_TRIANGLES);
-		glVertex2f( x, y );
-		glVertex2f( x1+x, y1+y );
-		glVertex2f( x2+x, y2+y );
-		glEnd();
-	}
 }
 
 void display(void)
@@ -573,23 +561,26 @@ void display(void)
 	//////////////////////////////////////////////
 	// 零点の描画
 	glColor3d(1.0,1.0,1.0);   // 白の点を描画
-	glPointSize(1.0);
+	glLineWidth(1.0);
 	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr)
 		Circle2DFill( (double)(0.05), (*itr).real(), (*itr).imag() );
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
 	// Apolloniusの描画
-//	SetGamma( Gam );       // Γ
-//	GetAlpha( Gam, Alp );  // α
-//	for (int i=0; i<Zrs.size(); i++)
-//	{
-//		for (int j=0; j<Zrs.size(); j++)
-//		{
-//			if (i!=j)
-//				DrawApollonius(i,j,Alp[i]);
-//		}
-//	}
+	SetGamma( Gam );       // Γ
+	GetAlpha( Gam, Alp );  // α
+
+	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+	glLineWidth(1.0);         // 線の太さ（ディフォルトは1.0）
+	for (int i=0; i<Zrs.size(); i++)
+	{
+		for (int j=0; j<Zrs.size(); j++)
+		{
+			if (i!=j)
+				DrawApollonius(i,j,Alp[i]);
+		}
+	}
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
