@@ -20,17 +20,18 @@
 #define MAXIT 16      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
-#define RMAX 2000     // 複素平面の分割数
-#define ORD  2        // 次数
+#define RMAX 1000     // 複素平面の分割数
+
+int P;       // Nourein法の次数
 
 // Zeros
 std::vector< thrust::complex<double> > Zrs
 {
-	thrust::complex<double> (  0.0,  1.0 );
-	thrust::complex<double> (  1.0,  2.0 );
-	thrust::complex<double> ( -1.0,  2.0 );
-	thrust::complex<double> (  3.0, -3.0 );
-	thrust::complex<double> ( -3.0, -3.0 );
+	thrust::complex<double> (  0.0,  1.0 ),
+	thrust::complex<double> (  1.0,  2.0 ),
+	thrust::complex<double> ( -1.0,  2.0 ),
+	thrust::complex<double> (  3.0, -3.0 ),
+	thrust::complex<double> ( -3.0, -3.0 )
 };
 
 // Coefficients
@@ -61,58 +62,55 @@ template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::
 }
 
 // Nourein subfunction
-template<typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
+template <typename T> thrust::complex<T> vc( const int K, thrust::complex<T> z )
 {
-	thrust::complex<T> f = thrust::complex<T> (0.0,0.0);;
+	thrust::complex<T> tmp = thrust::complex<T> (0.0,0.0);;
 
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
 	{
-		thrust::complex<T> tmp = thrust::complex<T> (1.0,0.0);
+		thrust::complex<T> vf, df;
+		Horner( Cef, *itr, vf, df );
 
-		// tmp = (z_i -z)^{k+1}
-		for (int k=0; k<=K; k++)
-		{
-			tmp = tmp * (fps[i] - z);
-		}
-		// tmp = -1.0 /  (z_i -z)^{k+1}
-		tmp = -1.0 / tmp;
-
-		f += ( 1.0 / df(fps[i]) )*tmp;
+		// tmp *= (1/f'(z_i) (-1 / (z_i -z)^{K+1})
+		tmp += ( (T)(1.0) / df )*( (T)(-1.0) / pow( (*itr - z), (T)(K+1) ));
 	}
-	return f;
+	return tmp;
 }
 
-template<typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, double &er )
+template <typename T> thrust::complex<T> Nourein( const int p, thrust::complex<T> z, int &count, T &er )
 {
 	assert(p>=2);
 
+	thrust::complex<T> vf, df;
+	Horner( Cef, z, vf, df );
 	count = 0;
 
-	while ((count < MAXIT) && (abs(vf(z)) > EPS))
+	while ((count < MAXIT) && (abs(vf) > EPS))
 	{
 		z += vc(p-2,z) / vc(p-1,z);
+		Horner( Cef, z, vf, df );
 		count++;
 	}
-	er = abs(vf(z));
+	er = abs(vf);
 
 	return z;
 }
 
-template<typename T> int FixPoint( thrust::complex<T> z )
+template <typename T> int FixPoint( thrust::complex<T> z )
 {
+	int i = 0;
 	int col = 0;
-//	int col = 1;
-	double min = (double)MAXIT;
+	double min = (double)(MAXIT);
 
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr )
 	{
-		if (abs(z - fps[i]) < min)
+		if (abs( z - *itr) < min)
 		{
-			min = abs(z - fps[i]);
+			min = abs( z - *itr);
 			col = i;
 		}
+		i++;
 	}
-
 	return col;
 }
 
@@ -122,8 +120,6 @@ void display(void)
 	// 背景を白に
 	glClearColor(1.0, 1.0, 1.0, 1.0); // 塗りつぶしの色を指定
 	glClear(GL_COLOR_BUFFER_BIT);     // 塗りつぶし
-
-	setZero(fps);     // 零点のセット
 
 	//////////////////////////////////////////////
 	// 点の描画
@@ -138,32 +134,33 @@ void display(void)
 			int count;
 			double er;
 			thrust::complex<double> z0 = thrust::complex<double>( x, y );
-			thrust::complex<double> z = Nourein(ORD,z0,count,er);
+			thrust::complex<double> z = Nourein(P,z0,count,er);
 
-			double brit;
-			if (count > 13)
-				brit = 0.0;
+			double bright;
+			if (count > MAXIT)
+				bright = 0.0;
 			else
-				brit = (13.0 - double(count)) / 13.0;
-			// 明るさの補正
-			brit += 0.2;
+			{
+				// 反復回数1回が最も明るく（bright=1）となるように修正（count-1）
+				bright = double(MAXIT - (count-1)) / double(MAXIT);
+			}
 
 			switch( FixPoint(z) )  // 塗りつぶし色の設定
 			{
 			case 0:
-				glColor3d(brit,0.0,0.0);
+				glColor3d(bright,0.0,0.0);
 				break;
 			case 1:
-				glColor3d(0.0,brit,0.0);
+				glColor3d(0.0,bright,0.0);
 				break;
 			case 2:
-				glColor3d(0.0,0.0,brit);
+				glColor3d(0.0,0.0,bright);
 				break;
 			case 3:
-				glColor3d(brit,0.0,brit);
+				glColor3d(bright,0.0,bright);
 				break;
 			case 4:
-				glColor3d(0.0,brit,brit);
+				glColor3d(0.0,bright,bright);
 				break;
 			default:
 				glColor3d(0.0,0.0,0.0);
@@ -178,12 +175,12 @@ void display(void)
 	glEnd();
 
 	// Z_i の描画
-	for (int i=0; i<NFP; i++)
+	for (auto itr = Zrs.begin(); itr < Zrs.end(); ++itr)
 	{
 		glColor3d(1.0,1.0,1.0);   // 白の点を描画
 		glPointSize(8.0);      // 点の大きさ（ディフォルトは1.0)
 		glBegin(GL_POINTS);
-		glVertex2d( fps[i].real(), fps[i].imag() );
+		glVertex2d( (*itr).real(), (*itr).imag() );
 		glEnd();
 	}
 
@@ -205,6 +202,13 @@ void resize(int w, int h)
 
 int main(int argc, char *argv[])
 {
+	if (argc<2)
+	{
+		std::cerr << "Usage: a.out [Order]\n";
+		exit (EXIT_FAILURE);
+	}
+	P = atoi(argv[1]);  // Nourein法の次数
+
 	glutInit(&argc, argv);          // OpenGL初期化
 	glutInitWindowSize(1100,1100);  // 初期Windowサイズ指定
 	glutCreateWindow(argv[0]);      // Windowを開く
