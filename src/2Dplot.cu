@@ -12,50 +12,52 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
-
+#include <vector>
+#include <GLUT/glut.h>
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
-#define MAXIT 30      // 最大反復回数
+#define MAXIT 16      // 最大反復回数
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
 #define RMAX 2000     // 複素平面の分割数
 #define ORD  2        // 次数
 
-#if defined (__APPLE__) || defined(MACOSX)
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #include <GLUT/glut.h>
-  #ifndef glutCloseFunc
-  #define glutCloseFunc glutWMCloseFunc
-  #endif
-#else
-#include <GL/freeglut.h>
-#endif
-
-#define NFP 5 // 零点の数
-thrust::complex<double> fps[NFP];
-
-void setZero( thrust::complex<double> *fps )
+// Zeros
+std::vector< thrust::complex<double> > Zrs
 {
-	fps[0] = thrust::complex<double> (  0.0,  1.0 );
-	fps[1] = thrust::complex<double> (  1.0,  2.0 );
-	fps[2] = thrust::complex<double> ( -1.0,  2.0 );
-	fps[3] = thrust::complex<double> (  3.0, -3.0 );
-	fps[4] = thrust::complex<double> ( -3.0, -3.0 );
-}
+	thrust::complex<double> (  0.0,  1.0 );
+	thrust::complex<double> (  1.0,  2.0 );
+	thrust::complex<double> ( -1.0,  2.0 );
+	thrust::complex<double> (  3.0, -3.0 );
+	thrust::complex<double> ( -3.0, -3.0 );
+};
 
-// Polynomial
-template<typename T> thrust::complex<T> vf( thrust::complex<T> z )
+// Coefficients
+std::vector< thrust::complex<double> > Cef
 {
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return z*z*z*z*z + iu*z*z*z*z + + 3.0*z*z*z + 41.0*iu*z*z + 132.0*z -90.0*iu;
-}
+	thrust::complex<double> (   1.0,   0.0 ),  // Z^5
+	thrust::complex<double> (   0.0,   1.0 ),  // Z^4
+	thrust::complex<double> (   3.0,   0.0 ),  // Z^3
+	thrust::complex<double> (   0.0,  41.0 ),  // z^2
+	thrust::complex<double> ( 132.0,   0.0 ),  // z^1
+	thrust::complex<double> (   0.0, -90.0 )   // z^0
+};
 
-// derived function of the polynomial
-template<typename T> thrust::complex<T> df( thrust::complex<T> z )
+// Hornet method for polynomial
+template<typename T> void Horner( std::vector< thrust::complex<T> > cf, thrust::complex<T> z,
+					thrust::complex<T> &vf, thrust::complex<T> &df )
 {
-	thrust::complex<T> iu = thrust::complex<T> ( 0.0, 1.0 );
-	return 5.0*z*z*z*z + 4.0*iu*z*z*z + 9.0*z*z + 82.0*iu*z + 132.0;
+	vf = Cef[0];
+	df = thrust::complex<T> (0.0,0.0);
+	thrust::complex<T> tmp;
+
+    for(auto itr = Cef.begin()+1; itr < Cef.end(); ++itr)
+    {
+    	tmp = vf;
+    	vf = vf*z + *itr;
+    	df = df*z + tmp;
+    }
 }
 
 // Nourein subfunction
