@@ -14,7 +14,7 @@
 #include <cassert>
 #include <algorithm>
 #include <vector>
-#include <GLUT/glut.h>
+#include <GL/freeglut.h>
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
