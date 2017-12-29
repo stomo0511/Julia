@@ -12,8 +12,17 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
-#include <GLUT/glut.h>
 #include <thrust/complex.h>
+
+#if defined (__APPLE__) || defined(MACOSX)
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #include <GLUT/glut.h>
+  #ifndef glutCloseFunc
+  #define glutCloseFunc glutWMCloseFunc
+  #endif
+#else
+#include <GL/freeglut.h>
+#endif
 
 #define EPS 0.000001  // 停止判定
 #define MAXIT 30      // 最大反復回数
