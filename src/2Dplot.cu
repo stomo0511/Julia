@@ -14,7 +14,17 @@
 #include <cassert>
 #include <algorithm>
 #include <vector>
+
+#if defined (__APPLE__) || defined(MACOSX)
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #include <GLUT/glut.h>
+  #ifndef glutCloseFunc
+  #define glutCloseFunc glutWMCloseFunc
+  #endif
+#else
 #include <GL/freeglut.h>
+#endif
+
 #include <thrust/complex.h>
 
 #define EPS 0.000001  // 停止判定
