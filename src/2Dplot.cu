@@ -576,19 +576,19 @@ void display(void)
 
 	//////////////////////////////////////////////
 	// Apolloniusの描画
-	SetGamma( Gam );       // Γ
-	GetAlpha( Gam, Alp );  // α
-
-	glColor3d(1.0,1.0,1.0);   // 白の円を描画
-	glLineWidth(1.0);         // 線の太さ（ディフォルトは1.0）
-	for (int i=0; i<Zrs.size(); i++)
-	{
-		for (int j=0; j<Zrs.size(); j++)
-		{
-			if (i!=j)
-				DrawApollonius(i,j,Alp[i]);
-		}
-	}
+//	SetGamma( Gam );       // Γ
+//	GetAlpha( Gam, Alp );  // α
+//
+//	glColor3d(1.0,1.0,1.0);   // 白の円を描画
+//	glLineWidth(1.0);         // 線の太さ（ディフォルトは1.0）
+//	for (int i=0; i<Zrs.size(); i++)
+//	{
+//		for (int j=0; j<Zrs.size(); j++)
+//		{
+//			if (i!=j)
+//				DrawApollonius(i,j,Alp[i]);
+//		}
+//	}
 	//////////////////////////////////////////////
 
 	//////////////////////////////////////////////
