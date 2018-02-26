@@ -13,7 +13,17 @@
 #include <cmath>
 #include <cassert>
 #include <vector>
-#include <GLUT/glut.h>
+
+#if defined (__APPLE__) || defined(MACOSX)
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #include <GLUT/glut.h>
+  #ifndef glutCloseFunc
+  #define glutCloseFunc glutWMCloseFunc
+  #endif
+#else
+#include <GL/freeglut.h>
+#endif
+
 #include <thrust/complex.h>
 
 #define ZMAX 4.0      // 初期値の最大絶対値
