@@ -12,7 +12,9 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include <algorithm>
 #include <vector>
+#include <thrust/complex.h>
 
 #if defined (__APPLE__) || defined(MACOSX)
   #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -23,8 +25,6 @@
 #else
 #include <GL/freeglut.h>
 #endif
-
-#include <thrust/complex.h>
 
 #define ZMAX 4.0      // 初期値の最大絶対値
 #define ZOOM 200      // 拡大率
@@ -77,7 +77,7 @@ void Reg0()
 //零点 0 の Voronoi Cell
 void Cell0()
 {
-	glColor3d(1.0,0.0,0.0);
+	glColor3d(1.0,0.0,0.0);  // 赤
 	glBegin(GL_POLYGON);
 	glVertex2d( 0.0, 2.0 );
 	glVertex2d(  2.3571, -0.3571 );
@@ -89,7 +89,7 @@ void Cell0()
 // 零点 1 の Voronoi Cell
 void Cell1()
 {
-	glColor3d(0.0,1.0,0.0);
+	glColor3d(0.0,1.0,0.0);  // 緑
 	glBegin(GL_POLYGON);
 	glVertex2d( 0.0, 2.0 );
 	glVertex2d( 2.3571, -0.3571 );
@@ -102,7 +102,7 @@ void Cell1()
 // 零点 2 の Voronoi Cell
 void Cell2()
 {
-	glColor3d(0.0,0.0,1.0);
+	glColor3d(0.0,0.0,1.0);  // 青
 	glBegin(GL_POLYGON);
 	glVertex2d( 0.0, 2.0 );
 	glVertex2d( -2.3571, -0.3571 );
@@ -115,7 +115,7 @@ void Cell2()
 // 零点 3 の Voronoi Cell
 void Cell3()
 {
-	glColor3d(1.0,0.0,1.0);
+	glColor3d(1.0,0.0,1.0);  // パープル
 	glBegin(GL_POLYGON);
 	glVertex2d( 2.3571, -0.3571 );
 	glVertex2d( 0.0, -2.125 );
@@ -128,12 +128,67 @@ void Cell3()
 // 零点 4 の Voronoi Cell
 void Cell4()
 {
-	glColor3d(0.0,1.0,1.0);
+	glColor3d(0.0,1.0,1.0);  // シアン
 	glBegin(GL_POLYGON);
 	glVertex2d( -2.3571, -0.3571 );
 	glVertex2d( 0.0, -2.125 );
 	glVertex2d( 0.0, -4.0 );
 	glVertex2d( -4.0, -4.0 );
+	glVertex2d( -4.0,  0.3 );
+	glEnd();
+}
+
+// Voronoi Cell の境界描画
+void Borders()
+{
+	glColor3d(1.0,1.0,1.0);  // 白
+	glLineWidth(3.0);
+
+	// 赤の右上
+	glBegin(GL_LINES);
+	glVertex2d( 0.0, 2.0 );
+	glVertex2d(  2.3571, -0.3571 );
+	glEnd();
+
+	// 赤の右下
+	glBegin(GL_LINES);
+	glVertex2d(  2.3571, -0.3571 );
+	glVertex2d(  0.0, -2.125 );
+	glEnd();
+
+	// 赤の左下
+	glBegin(GL_LINES);
+	glVertex2d(  0.0, -2.125 );
+	glVertex2d( -2.3571, -0.3571 );
+	glEnd();
+
+	// 赤の左上
+	glBegin(GL_LINES);
+	glVertex2d( -2.3571, -0.3571 );
+	glVertex2d( 0.0, 2.0 );
+	glEnd();
+
+	// 緑-青
+	glBegin(GL_LINES);
+	glVertex2d( 0.0, 2.0 );
+	glVertex2d( 0.0, 4.0 );
+	glEnd();
+
+	// 緑-パープル
+	glBegin(GL_LINES);
+	glVertex2d(  2.3571, -0.3571 );
+	glVertex2d( 4.0,  0.3 );
+	glEnd();
+
+	// パープル-シアン
+	glBegin(GL_LINES);
+	glVertex2d(  0.0, -2.125 );
+	glVertex2d(  0.0, -4.0 );
+	glEnd();
+
+	// シアン-青
+	glBegin(GL_LINES);
+	glVertex2d( -2.3571, -0.3571 );
 	glVertex2d( -4.0,  0.3 );
 	glEnd();
 }
@@ -162,6 +217,9 @@ void display(void)
 
 	//零点 4 の Voronoi Cell
 	Cell4();
+
+	// Voronoi Cell の境界描画
+	Borders();
 
 	// Z_i の描画
 	for (auto itr = Zrs.begin(); itr < Zrs.end(); itr++)
